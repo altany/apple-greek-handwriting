@@ -3,12 +3,14 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		03C720881060CC559C50D5E2 /* InkTestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9FB12A11186C36B4E866B555 /* InkTestView.swift */; };
 		0647E6FA8E99EE1639C6B9BB /* MemoryFootprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2829219E6AAB11D101A0C56F /* MemoryFootprint.swift */; };
+		0C57DA8CF979849F25F66BD6 /* Pods_GreekInkKeyboard.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7F6E038B5AB67A1C64D8DBF2 /* Pods_GreekInkKeyboard.framework */; };
+		69BC7B19BCDF26EABC13B764 /* Pods_GreekInk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 93226CA531FF200CF883A664 /* Pods_GreekInk.framework */; };
 		800247308B371D42537C939C /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1ADE02ADA21F653C02CDB332 /* ContentView.swift */; };
 		9C65D041C019ECA428844A04 /* MemoryFootprint.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2829219E6AAB11D101A0C56F /* MemoryFootprint.swift */; };
 		AE8D93B3146E4505EBE71CC9 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2CB359D94441D5233241314 /* AppGroup.swift */; };
@@ -45,18 +47,47 @@
 /* Begin PBXFileReference section */
 		0125DC61E8FB5728FD17E6CE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		0AE31AB8CC67D01569D93F2C /* GreekInkKeyboard.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = GreekInkKeyboard.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		129B008F5532349B45857D28 /* Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.xcconfig; sourceTree = "<group>"; };
 		1ABD9AB6053C437911798587 /* GreekInkKeyboard.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GreekInkKeyboard.entitlements; sourceTree = "<group>"; };
 		1ADE02ADA21F653C02CDB332 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		203F35A6F382F4D972D69CE7 /* KeyboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardViewController.swift; sourceTree = "<group>"; };
 		252B2BB22D4DFFE109855A6E /* GreekInk.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GreekInk.entitlements; sourceTree = "<group>"; };
 		2829219E6AAB11D101A0C56F /* MemoryFootprint.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MemoryFootprint.swift; sourceTree = "<group>"; };
 		2EADA5BD0E1138762546BF62 /* GreekInk.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = GreekInk.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		3669C46D6E42D4D0875A5510 /* Pods-GreekInkKeyboard.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GreekInkKeyboard.release.xcconfig"; path = "Target Support Files/Pods-GreekInkKeyboard/Pods-GreekInkKeyboard.release.xcconfig"; sourceTree = "<group>"; };
 		518C8C679D7CFD7A2CC1DC50 /* GreekInkApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GreekInkApp.swift; sourceTree = "<group>"; };
+		5A7A20AC6A02B49A3D8702AE /* Pods-GreekInk.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GreekInk.release.xcconfig"; path = "Target Support Files/Pods-GreekInk/Pods-GreekInk.release.xcconfig"; sourceTree = "<group>"; };
 		5E98B308389FD13424DBFB7E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		62581189936E086079DED4CB /* Pods-GreekInkKeyboard.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GreekInkKeyboard.debug.xcconfig"; path = "Target Support Files/Pods-GreekInkKeyboard/Pods-GreekInkKeyboard.debug.xcconfig"; sourceTree = "<group>"; };
+		7F6E038B5AB67A1C64D8DBF2 /* Pods_GreekInkKeyboard.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GreekInkKeyboard.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8B3C8A569690F8F199D4802B /* Podfile */ = {isa = PBXFileReference; path = Podfile; sourceTree = "<group>"; };
+		93226CA531FF200CF883A664 /* Pods_GreekInk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_GreekInk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		9FB12A11186C36B4E866B555 /* InkTestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InkTestView.swift; sourceTree = "<group>"; };
+		BBB913528CFFEB7806D9FED4 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		CDA0D9181457F638D0FC78DF /* Local.xcconfig.example */ = {isa = PBXFileReference; path = Local.xcconfig.example; sourceTree = "<group>"; };
 		D2CB359D94441D5233241314 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
-		"TEMP_5255C04C-5899-483D-85EF-4EA2D839317E" /* Local.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Local.xcconfig; sourceTree = "<group>"; };
+		DC40656F72FA814F691EBC9B /* CLAUDE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = CLAUDE.md; sourceTree = "<group>"; };
+		DEA1293B157E7B2FB9184C50 /* Pods-GreekInk.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-GreekInk.debug.xcconfig"; path = "Target Support Files/Pods-GreekInk/Pods-GreekInk.debug.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		2F0F3CDC075EDC4D830E4DCA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				69BC7B19BCDF26EABC13B764 /* Pods_GreekInk.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F1632469C26A2C85EE8AF9A0 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				0C57DA8CF979849F25F66BD6 /* Pods_GreekInkKeyboard.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		1FC1EC4D6CCA89485515054F /* GreekInkKeyboard */ = {
@@ -79,13 +110,29 @@
 			path = Shared;
 			sourceTree = "<group>";
 		};
+		5D775D1994C04DB2BCB87065 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				93226CA531FF200CF883A664 /* Pods_GreekInk.framework */,
+				7F6E038B5AB67A1C64D8DBF2 /* Pods_GreekInkKeyboard.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		68E28C60D491FE004CFA5002 = {
 			isa = PBXGroup;
 			children = (
 				733D58115CC2D7202E9A438B /* GreekInk */,
 				1FC1EC4D6CCA89485515054F /* GreekInkKeyboard */,
 				3AC37AFC2E775447BBA7DBA6 /* Shared */,
+				DC40656F72FA814F691EBC9B /* CLAUDE.md */,
+				129B008F5532349B45857D28 /* Local.xcconfig */,
+				CDA0D9181457F638D0FC78DF /* Local.xcconfig.example */,
+				8B3C8A569690F8F199D4802B /* Podfile */,
+				BBB913528CFFEB7806D9FED4 /* README.md */,
 				945F588D199DF3291A93E42B /* Products */,
+				7992EE168BBFC1F405854E8B /* Pods */,
+				5D775D1994C04DB2BCB87065 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -100,6 +147,18 @@
 			path = GreekInk;
 			sourceTree = "<group>";
 		};
+		7992EE168BBFC1F405854E8B /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				DEA1293B157E7B2FB9184C50 /* Pods-GreekInk.debug.xcconfig */,
+				5A7A20AC6A02B49A3D8702AE /* Pods-GreekInk.release.xcconfig */,
+				62581189936E086079DED4CB /* Pods-GreekInkKeyboard.debug.xcconfig */,
+				3669C46D6E42D4D0875A5510 /* Pods-GreekInkKeyboard.release.xcconfig */,
+			);
+			name = Pods;
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		945F588D199DF3291A93E42B /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -109,14 +168,6 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		"TEMP_11D4C077-F380-4C8A-B471-5F1FFA825A3D" /* apple-greek-handwritting */ = {
-			isa = PBXGroup;
-			children = (
-				"TEMP_5255C04C-5899-483D-85EF-4EA2D839317E" /* Local.xcconfig */,
-			);
-			path = "apple-greek-handwritting";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -124,8 +175,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 230DF3A71ECA40E81A01C54C /* Build configuration list for PBXNativeTarget "GreekInk" */;
 			buildPhases = (
+				7AF2FC684F1B5739660C08D7 /* [CP] Check Pods Manifest.lock */,
 				781CFCF2906FEA1C81E0624D /* Sources */,
 				9F33DF3A14EF1B694F9898A9 /* Embed Foundation Extensions */,
+				2F0F3CDC075EDC4D830E4DCA /* Frameworks */,
+				3C1DAB4E3F587771F361D954 /* [CP] Embed Pods Frameworks */,
+				7EF3EFE002ABAA4CD09C8F9F /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -133,8 +188,6 @@
 				5E7F1FEB9653AB19A44788C9 /* PBXTargetDependency */,
 			);
 			name = GreekInk;
-			packageProductDependencies = (
-			);
 			productName = GreekInk;
 			productReference = 2EADA5BD0E1138762546BF62 /* GreekInk.app */;
 			productType = "com.apple.product-type.application";
@@ -143,15 +196,16 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 6C1DC665A66846F3A87E3308 /* Build configuration list for PBXNativeTarget "GreekInkKeyboard" */;
 			buildPhases = (
+				28DC362FC9E1C9D192D6A816 /* [CP] Check Pods Manifest.lock */,
 				5D9BE84D9DEDA501BBC317E5 /* Sources */,
+				F1632469C26A2C85EE8AF9A0 /* Frameworks */,
+				B92E9B2016AFBB3CAAADC5EA /* [CP] Copy Pods Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
 			name = GreekInkKeyboard;
-			packageProductDependencies = (
-			);
 			productName = GreekInkKeyboard;
 			productReference = 0AE31AB8CC67D01569D93F2C /* GreekInkKeyboard.appex */;
 			productType = "com.apple.product-type.app-extension";
@@ -184,7 +238,6 @@
 			);
 			mainGroup = 68E28C60D491FE004CFA5002;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			productRefGroup = 945F588D199DF3291A93E42B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -194,6 +247,104 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		28DC362FC9E1C9D192D6A816 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-GreekInkKeyboard-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		3C1DAB4E3F587771F361D954 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GreekInk/Pods-GreekInk-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GreekInk/Pods-GreekInk-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GreekInk/Pods-GreekInk-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		7AF2FC684F1B5739660C08D7 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-GreekInk-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		7EF3EFE002ABAA4CD09C8F9F /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GreekInk/Pods-GreekInk-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GreekInk/Pods-GreekInk-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GreekInk/Pods-GreekInk-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		B92E9B2016AFBB3CAAADC5EA /* [CP] Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GreekInkKeyboard/Pods-GreekInkKeyboard-resources-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Copy Pods Resources";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-GreekInkKeyboard/Pods-GreekInkKeyboard-resources-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-GreekInkKeyboard/Pods-GreekInkKeyboard-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5D9BE84D9DEDA501BBC317E5 /* Sources */ = {
@@ -231,6 +382,7 @@
 /* Begin XCBuildConfiguration section */
 		02B8CCBEDD09E2AAF4A502E8 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3669C46D6E42D4D0875A5510 /* Pods-GreekInkKeyboard.release.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = GreekInkKeyboard/GreekInkKeyboard.entitlements;
@@ -249,7 +401,7 @@
 		};
 		32722CC2E91083B61306F449 /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_5255C04C-5899-483D-85EF-4EA2D839317E" /* Local.xcconfig */;
+			baseConfigurationReference = 129B008F5532349B45857D28 /* Local.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -287,7 +439,7 @@
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -312,6 +464,7 @@
 		};
 		45C087706C10F71A4322BA65 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = DEA1293B157E7B2FB9184C50 /* Pods-GreekInk.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GreekInk/GreekInk.entitlements;
@@ -331,6 +484,7 @@
 		};
 		4CFDBC1458307449B89885A4 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 5A7A20AC6A02B49A3D8702AE /* Pods-GreekInk.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = GreekInk/GreekInk.entitlements;
@@ -350,7 +504,7 @@
 		};
 		51653193B8A521F362F44B68 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = "TEMP_5255C04C-5899-483D-85EF-4EA2D839317E" /* Local.xcconfig */;
+			baseConfigurationReference = 129B008F5532349B45857D28 /* Local.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				CLANG_ANALYZER_NONNULL = YES;
@@ -388,7 +542,7 @@
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -420,6 +574,7 @@
 		};
 		E4B8DF9E0279FE6B005E4C9C /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 62581189936E086079DED4CB /* Pods-GreekInkKeyboard.debug.xcconfig */;
 			buildSettings = {
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				CODE_SIGN_ENTITLEMENTS = GreekInkKeyboard/GreekInkKeyboard.entitlements;

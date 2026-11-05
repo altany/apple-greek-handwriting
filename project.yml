@@ -9,6 +9,15 @@ options:
   createIntermediateGroups: true
   generateEmptyDirectories: true
   groupSortPosition: top
+  # CocoaPods 1.15 can't read Xcode 16.3+ project format (objectVersion 77). Downgrade to 60 (Xcode 15), which Xcode 27 still opens fine.
+  postGenCommand: sed -i '' -e 's/objectVersion = 77;/objectVersion = 60;/' -e '/preferredProjectObjectVersion/d' GreekInk.xcodeproj/project.pbxproj
+
+fileGroups:
+  - Local.xcconfig
+  - Local.xcconfig.example
+  - Podfile
+  - README.md
+  - CLAUDE.md
 
 configFiles:
   Debug: Local.xcconfig
@@ -22,7 +31,7 @@ settings:
     # DEVELOPMENT_TEAM is deliberately NOT set here. It comes from Local.xcconfig.
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    ENABLE_USER_SCRIPT_SANDBOXING: NO   # CocoaPods scripts write into Pods/
     SWIFT_STRICT_CONCURRENCY: minimal
     IPHONEOS_DEPLOYMENT_TARGET: "17.0"
 
