@@ -59,6 +59,9 @@ targets:
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         UIRequiresFullScreen: false
+        # Lets the Files app see Documents/misreads.json
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
         # Read at runtime by Shared/AppGroup.swift. Expanded by Xcode at build time.
         AppGroupIdentifier: group.$(BUNDLE_ID_PREFIX).greekink
     entitlements:
