@@ -141,8 +141,11 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
   model only emits Greek script and ML Kit has no mixed Greek/Latin model. Options for Phase 3:
   a Latin toggle key, or also run the `en` model and show its top candidate as an extra chip
   (second recognition ~100 ms, second model in RAM; measure in the keyboard first).
-- First misread (finger, 19 strokes, el): wrote "Καλημέρα αγάπη μου!", all 5 candidates read the
-  final α of Καλημέρα as "ου"/"ους"; accents and the rest were right.
+- Misreads so far (el): finger, 19 strokes: "Καλημέρα αγάπη μου!" → "Καλημέρου αγάπη μου!"
+  (final α → ου). Pencil, 17 strokes: "Καλημέρα αγάπη μου Μαΐου" → "Καλημέρα γάπη του Μαΐου"
+  (leading α of αγάπη dropped, μ → τ/κ). Accents, dialytika and capitals right both times.
+  One candidate contained a Latin "g" ("gάπη"), so the el model can emit some Latin letters,
+  but its language model strongly prefers Greek words.
 - GitHub pushes sometimes fail with `remote: fatal error in commit_refs_rules`
   (GitHub-side, intermittent). Just retry.
 
