@@ -47,7 +47,7 @@ Personal use only. No App Store.
   ~10 new App IDs per week, max 3 self-signed apps on the device at once.
 
 ## Known risks (verify, don't assume)
-1. Memory: keyboard extensions are killed silently above ~48–60MB. ML Kit model
+1. Memory: measured limit ~90MB on the iPad Air M1 (see Findings), not 48–60MB. ML Kit model
    alone ~20MB in RAM. Measure on the real iPad as soon as the keyboard runs.
 2. Network: without "Allow Full Access" a keyboard extension has no network and
    cannot download the model. Plan (a): host app downloads, shares via App Group.
@@ -102,6 +102,12 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
   dynamic frameworks are embedded in the app and shared with the extension.
 - iPad: UDID <IPAD-UDID>, "iPad". Developer Mode enabled.
   First launch needs Settings > General > VPN & Device Management > trust.
+- Keyboard memory on the iPad Air M1 / iPadOS 27 (Phase 0 keyboard, ML Kit linked but not
+  loaded): 8.3 MB used, 81.7 MB headroom → the kill limit is ~90 MB on this device, not
+  the 48–60 MB assumed. ML Kit model (~20 MB) should fit; re-measure once it is loaded.
+- Without Full Access the keyboard can READ the App Group container but NOT write to it
+  ("no permission" on write). So: host app downloads the model, keyboard reads it.
+  Phase 2 must test whether ML Kit can load a model from a read-only shared path.
 - GitHub pushes sometimes fail with `remote: fatal error in commit_refs_rules`
   (GitHub-side, intermittent). Just retry.
 
