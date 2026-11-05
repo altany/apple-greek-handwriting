@@ -42,7 +42,8 @@ final class InkRecognitionService: ObservableObject {
     @Published private(set) var modelStates: [InkLanguage: ModelState] = [:]
 
     private let modelManager = ModelManager.modelManager()
-    private var recognizers: [InkLanguage: DigitalInkRecognizer] = [:]
+    /// Cached per language, together with the maxResults it was built with.
+    private var recognizers: [InkLanguage: (recognizer: DigitalInkRecognizer, maxResults: Int)] = [:]
     private var observers: [NSObjectProtocol] = []
 
     init() {
@@ -156,13 +157,14 @@ final class InkRecognitionService: ObservableObject {
     }
 
     private func recognizer(for language: InkLanguage, maxResults: Int, requireDownloaded: Bool) throws -> DigitalInkRecognizer {
-        if let cached = recognizers[language] { return cached }
+        // maxResults is fixed when the recognizer is built: rebuild if a caller asks for another count.
+        if let cached = recognizers[language], cached.maxResults == maxResults { return cached.recognizer }
         let model = try model(for: language)
         guard !requireDownloaded || modelManager.isModelDownloaded(model) else { throw RecognitionError.modelNotDownloaded(language) }
         let options = DigitalInkRecognizerOptions(model: model)
         options.maxResultCount = Int32(maxResults)
         let recognizer = DigitalInkRecognizer.digitalInkRecognizer(options: options)
-        recognizers[language] = recognizer
+        recognizers[language] = (recognizer, maxResults)
         return recognizer
     }
 }

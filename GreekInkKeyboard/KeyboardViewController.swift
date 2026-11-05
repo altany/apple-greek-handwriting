@@ -14,6 +14,7 @@ final class KeyboardViewController: UIInputViewController {
     /// Long enough to add a tonos or dialytika after the letters.
     static let commitDelay: Duration = .milliseconds(800)
     static let keyboardHeight: CGFloat = 300
+    static let candidateCount = 5
 
     private let canvas = InkCanvasView()
     private let candidateStack = UIStackView()
@@ -118,7 +119,7 @@ final class KeyboardViewController: UIInputViewController {
         let dummy = InkStroke(points: points, touchType: .direct)
         let started = Date()
         do {
-            _ = try await service.recognize([dummy], language: language, maxResults: 1,
+            _ = try await service.recognize([dummy], language: language, maxResults: Self.candidateCount,
                                             requireDownloaded: downloaded)
             let ms = Int(Date().timeIntervalSince(started) * 1000)
             if !downloaded { skipDownloadCheck = true }
@@ -166,7 +167,7 @@ final class KeyboardViewController: UIInputViewController {
         let started = Date()
         do {
             let result = try await service.recognize(strokes, language: language,
-                                                     writingArea: canvas.bounds.size, maxResults: 5,
+                                                     writingArea: canvas.bounds.size, maxResults: Self.candidateCount,
                                                      requireDownloaded: !skipDownloadCheck)
             let ms = Int(Date().timeIntervalSince(started) * 1000)
             // Strokes written while recognition ran stay on the strip for the next word.
@@ -286,7 +287,7 @@ final class KeyboardViewController: UIInputViewController {
         candidateStack.axis = .horizontal
         candidateStack.spacing = 6
         candidateStack.distribution = .fillEqually
-        for _ in 0..<5 {
+        for _ in 0..<Self.candidateCount {
             var config = UIButton.Configuration.plain()
             config.titleLineBreakMode = .byTruncatingTail
             let b = UIButton(configuration: config)
