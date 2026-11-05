@@ -40,7 +40,13 @@ pick that team, and copy the ID that Xcode writes next to it.
 
 ## Build and install on the iPad
 
-Plug in the iPad, unlock it, tap **Trust** when asked.
+Plug in the iPad, unlock it, tap **Trust** when asked. Then the short way:
+
+```sh
+scripts/install-ipad.sh        # build + install + launch; auto-detects the iPad
+```
+
+Or by hand:
 
 ```sh
 # Find the iPad's identifier
