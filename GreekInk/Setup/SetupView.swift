@@ -1,17 +1,21 @@
 import SwiftUI
 
-/// Setup steps, App Group test (Phase 0) and model storage report.
+/// Enable-keyboard steps, model status, the copy of the model the keyboard uses, diagnostics.
 struct SetupView: View {
     @ObservedObject var service: InkRecognitionService
-    @State private var log: [String] = []
+    @ObservedObject var exporter: KeyboardModelExporter
     @State private var storageReport = ""
 
     var body: some View {
         List {
-            Section("Enable the keyboard") {
+            Section {
                 Text("1. Settings → General → Keyboard → Keyboards → Add New Keyboard…")
                 Text("2. Under Third-Party Keyboards pick “GreekInk”.")
-                Text("3. In any text field, hold the 🌐 key and choose GreekInk.")
+                Text("3. In any text field, tap or hold the 🌐 key and choose GreekInk.")
+            } header: {
+                Text("Enable the keyboard")
+            } footer: {
+                Text("“Allow Full Access” is not needed: the keyboard uses the model this app downloads.")
             }
 
             Section("Recognition models") {
@@ -30,6 +34,19 @@ struct SetupView: View {
                 }
             }
 
+            Section {
+                LabeledContent("Shared copy", value: exporter.summary)
+                Button("Copy model for keyboard") { exporter.export(service: service) }
+                    .disabled(!InkLanguage.allCases.contains { service.modelStates[$0] == .downloaded })
+                if !exporter.message.isEmpty {
+                    Text(exporter.message).font(.caption).foregroundStyle(.secondary)
+                }
+            } header: {
+                Text("Model for the keyboard")
+            } footer: {
+                Text("Copied automatically whenever a model is downloaded or deleted. The keyboard picks up the new copy the next time it opens.")
+            }
+
             Section("Model storage (where ML Kit put the files)") {
                 Text(storageReport.isEmpty ? "Tap Refresh" : storageReport)
                     .font(.caption2.monospaced())
@@ -37,30 +54,9 @@ struct SetupView: View {
                 Button("Refresh") { storageReport = ModelStorageInspector.report() }
             }
 
-            Section("App Group test") {
-                LabeledContent("Group", value: AppGroup.identifier)
-                LabeledContent("Container", value: AppGroup.containerURL?.path ?? "nil (not granted)")
-                    .font(.caption)
-                Button("Write ping from app") { append(AppGroup.writePing(from: "app")) }
-                Button("Read ping") { append(AppGroup.readPing()) }
-            }
-
             Section("Memory (app)") {
                 Text(MemoryFootprint.summary()).font(.caption.monospaced())
             }
-
-            if !log.isEmpty {
-                Section("Log") {
-                    ForEach(Array(log.enumerated()), id: \.offset) { _, line in
-                        Text(line).font(.caption.monospaced())
-                    }
-                    Button("Clear log", role: .destructive) { log.removeAll() }
-                }
-            }
         }
-    }
-
-    private func append(_ line: String) {
-        log.insert("\(AppGroup.timestamp()) \(line)", at: 0)
     }
 }

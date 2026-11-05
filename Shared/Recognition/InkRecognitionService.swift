@@ -117,12 +117,15 @@ final class InkRecognitionService: ObservableObject {
 
     /// Recognises the strokes. `writingArea` is the canvas size in the same units as the points.
     /// `preContext` is text before the cursor (Phase 3). Returns up to `maxResults` candidates, best first.
+    /// `requireDownloaded: false` skips the `isModelDownloaded` check (diagnostics: does ML Kit load
+    /// the files anyway?).
     func recognize(_ strokes: [InkStroke],
                    language: InkLanguage,
                    preContext: String? = nil,
                    writingArea: CGSize? = nil,
-                   maxResults: Int = 5) async throws -> [RecognitionCandidate] {
-        let recognizer = try recognizer(for: language, maxResults: maxResults)
+                   maxResults: Int = 5,
+                   requireDownloaded: Bool = true) async throws -> [RecognitionCandidate] {
+        let recognizer = try recognizer(for: language, maxResults: maxResults, requireDownloaded: requireDownloaded)
         let ink = Ink(strokes: strokes.map { stroke in
             Stroke(points: stroke.points.map { p in
                 StrokePoint(x: Float(p.x), y: Float(p.y), t: Int(p.t * 1000))
@@ -152,10 +155,10 @@ final class InkRecognitionService: ObservableObject {
         recognizers.removeAll()
     }
 
-    private func recognizer(for language: InkLanguage, maxResults: Int) throws -> DigitalInkRecognizer {
+    private func recognizer(for language: InkLanguage, maxResults: Int, requireDownloaded: Bool) throws -> DigitalInkRecognizer {
         if let cached = recognizers[language] { return cached }
         let model = try model(for: language)
-        guard modelManager.isModelDownloaded(model) else { throw RecognitionError.modelNotDownloaded(language) }
+        guard !requireDownloaded || modelManager.isModelDownloaded(model) else { throw RecognitionError.modelNotDownloaded(language) }
         let options = DigitalInkRecognizerOptions(model: model)
         options.maxResultCount = Int32(maxResults)
         let recognizer = DigitalInkRecognizer.digitalInkRecognizer(options: options)

@@ -1,9 +1,10 @@
 import SwiftUI
 
 struct ContentView: View {
-    @StateObject private var service = InkRecognitionService()
-    @StateObject private var log = MisreadLog()
+    @StateObject private var service: InkRecognitionService
+    @StateObject private var log: MisreadLog
     @StateObject private var prototype: PrototypeViewModel
+    @StateObject private var exporter = KeyboardModelExporter()
 
     init() {
         let service = InkRecognitionService()
@@ -23,10 +24,13 @@ struct ContentView: View {
             .tabItem { Label("Write", systemImage: "pencil.and.scribble") }
 
             NavigationStack {
-                SetupView(service: service)
+                SetupView(service: service, exporter: exporter)
                     .navigationTitle("Setup")
             }
             .tabItem { Label("Setup", systemImage: "gearshape") }
         }
+        // The keyboard has no network without Full Access: keep a copy of the model for it.
+        .task { exporter.exportIfNeeded(service: service) }
+        .onChange(of: service.modelStates) { exporter.exportIfNeeded(service: service) }
     }
 }

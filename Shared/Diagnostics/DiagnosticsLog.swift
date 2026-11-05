@@ -1,9 +1,9 @@
 import Foundation
 
-/// Phase 1 only. Appends one line per event to Documents/diagnostics.log so the file can be
-/// pulled off the iPad without copy-paste:
+/// Appends one line per event to Documents/diagnostics.log of THIS process (app or keyboard),
+/// so the file can be pulled off the iPad without copy-paste:
 ///   xcrun devicectl device copy from --device <udid> --domain-type appDataContainer \
-///     --domain-identifier com.tany4.greekink --source Documents/diagnostics.log --destination .
+///     --domain-identifier com.tany4.greekink[.keyboard] --source Documents/diagnostics.log --destination .
 /// Keeps the file small by dropping the oldest half once it passes 256 KB.
 @MainActor
 final class DiagnosticsLog {

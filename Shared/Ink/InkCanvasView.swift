@@ -91,6 +91,17 @@ final class InkCanvasView: UIView {
     func undoLastStroke() {
         guard !strokes.isEmpty else { return }
         strokes.removeLast()
+        redrawCommitted()
+    }
+
+    /// Removes the oldest `count` strokes (the ones just recognised) and keeps any written since.
+    func removeFirstStrokes(_ count: Int) {
+        guard count > 0 else { return }
+        strokes.removeFirst(min(count, strokes.count))
+        redrawCommitted()
+    }
+
+    private func redrawCommitted() {
         committedPath.removeAllPoints()
         for stroke in strokes { committedPath.append(Self.path(for: stroke)) }
         committedLayer.path = committedPath.cgPath
