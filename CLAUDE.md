@@ -4,20 +4,20 @@ Personal iPad keyboard: handwrite Greek with Apple Pencil, get text in any app.
 Apple's Scribble has no Greek and no API to add one, so this is a custom keyboard.
 Personal use only. No App Store.
 
-## Status (2026-11-05, evening) — read this first
-- Phase 0 and Phase 1 are DONE and accepted. Phase 2 (keyboard MVP) is IN PROGRESS: the user
-  said "go". Built and installed, waiting for the first keyboard test on the iPad:
-  1. Model sharing: BUILT, NOT YET VERIFIED in the keyboard. The app copies ML Kit's folder into
-     the App Group (`Shared/Recognition/ModelSharing.swift`, verified: "model export auto: el+en,
-     74894314 bytes" in the app log). The keyboard copies it into its own container before
-     touching ML Kit, adding metadata files renamed to its bundle id. Its log says whether
-     `isModelDownloaded` passes and whether the warm-up recognition works. If ML Kit refuses,
-     fall back to downloading with Full Access on, and tell the user plainly.
-  2. Memory with the model loaded: logged by the keyboard after the warm-up ("warm-up el OK …,
-     memory: …"). Decide Plan B only on that number.
-  3. Real keyboard: BUILT (`GreekInkKeyboard/KeyboardViewController.swift`), not yet tried.
-  4. Host Setup screen: enable steps, model status, shared-copy status + "Copy model for keyboard".
-  After the test: pull the keyboard's log (command in Findings), record the result here.
+## Status (2026-11-05, late evening) — read this first
+- Phase 0 and Phase 1 are DONE and accepted. Phase 2 (keyboard MVP) is BUILT and its risky part
+  is VERIFIED on the iPad, without Full Access (first keyboard test, 21:29):
+  - Model sharing works: app copies ML Kit's folder into the App Group, keyboard copies it into
+    its own container (13 ms, APFS clone) and adds metadata files renamed to its bundle id.
+    `isModelDownloaded` = true for el and en, warm-up recognition OK. Full Access not needed.
+  - Memory with the el model loaded: 9.2 MB used, 80.8 MB headroom. The model is memory-mapped,
+    so it barely counts. Plan B is not needed.
+  - Timing in the keyboard: warm-up 53 ms, 12 strokes / 1193 points recognised in 93 ms.
+  - Bug found and fixed: only 1 candidate showed (warm-up cached a maxResults-1 recognizer).
+    Reinstalled; the 5-candidate bar is not yet re-tested by the user.
+- Open user question: how to fix a misread word in the middle or at the start of the text (the
+  candidate bar only swaps the LAST inserted word). Options offered, see the reply of that day.
+- Not yet tried by the user: ΕΛ/EN toggle, held backspace, return, light/dark, final sigma.
 - Decided along the way: the Greek/Latin toggle key is Phase 2. Running the `en` model as well
   and showing its top candidate as an extra chip is a Phase 3 experiment (measure memory first).
   Phase 4 stays optional: ask first, report cost and latency before building.
@@ -102,7 +102,7 @@ Personal use only. No App Store.
   ~10 new App IDs per week, max 3 self-signed apps on the device at once.
 
 ## Known risks (verify, don't assume)
-1. Memory [baseline measured, model-loaded number still missing]: limit ~90MB on the iPad
+1. Memory [MEASURED: 9.2 MB with the el model loaded in the keyboard, 80.8 MB headroom]: limit ~90MB on the iPad
    Air M1 (see Findings), not 48–60MB. ML Kit model alone ~20MB in RAM. Measure on the real
    iPad as soon as the keyboard loads the model.
 2. Network: without "Allow Full Access" a keyboard extension has no network and
@@ -111,9 +111,9 @@ Personal use only. No App Store.
    a free Personal Team. A keyboard without Full Access may only read (not
    write) the App Group container. ML Kit picks its own model folder. Test all.
    [App Groups on the Personal Team: VERIFIED. Keyboard read-only in the group: VERIFIED.
-   ML Kit loading a model from a shared path: NOT TESTED, first task of Phase 2.]
+   ML Kit loading the model copied from the App Group: VERIFIED, no Full Access.]
 3. ML Kit may not be extension-safe (APPLICATION_EXTENSION_API_ONLY). [Links and builds:
-   VERIFIED. Recognition running inside the extension: NOT TESTED.]
+   VERIFIED. Recognition running inside the extension: VERIFIED.]
 4. Apple Pencil in a keyboard extension: confirm touches arrive with
    `UITouch.TouchType.pencil` and drawing is smooth. Support finger too. [VERIFIED in the
    Phase 0 keyboard and in the app; palm handling lives in InkCanvasView, see Findings.]
@@ -207,6 +207,8 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
   (leading α of αγάπη dropped, μ → τ/κ). Accents, dialytika and capitals right both times.
   One candidate contained a Latin "g" ("gάπη"), so the el model can emit some Latin letters,
   but its language model strongly prefers Greek words.
+- First keyboard misread (Pencil, 12 strokes): "νερό στη βάρκα μας" → "μερό στη βάρκα μας"
+  (ν → μ at the start). Only 1 candidate was shown then (bug, fixed).
 - ML Kit's MDD metadata files are named `<bundle id>.com.google.mlkit.mdd.cellular.<model
   name>.<lang>.<number>` (e.g. `com.tany4.greekink.com.google…el.0001793897628892587`), protobuf
   inside, no absolute paths (only file hashes + dl.google.com URLs). Folder also has
