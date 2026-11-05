@@ -83,7 +83,7 @@ the official sample (github.com/googlesamples/mlkit, `ios/quickstarts/digitalink
 Plan B: if the keyboard can't fit in memory, keep the standalone app (write,
 copy, paste) and propose a Share/Action extension or a Shortcut.
 
-## Findings so far (Phase 0, 2026-11-05)
+## Findings so far (Phases 0–1, 2026-11-05)
 - Signing: certificate "Apple Development: <apple-id email> (…)" with O = the user's own
   name, OU = Personal Team ID → that is how to tell the Personal Team from the employer
   team. Team ID is only in Local.xcconfig.
@@ -129,6 +129,14 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
   bottom edge, so no palm). The canvas now keeps multi-touch on, lets a Pencil touch replace a
   finger/palm stroke, ignores finger touches for 1.5 s after Pencil contact, and discards
   cancelled touches instead of committing them.
+  Confirmed on the iPad: 101 Pencil strokes in a row, all delivered and committed.
+- Phase 1 result: on the iPad Air M1 recognition takes ~50 ms for 3 strokes and ~140 ms for a
+  93-stroke / 7380-point sentence (ML Kit call only). Long Greek sentences come out right,
+  including tonos, dialytika with tonos (Μαΐου) and capitals. Final sigma not tested yet.
+- Latin words inside Greek text come out as Greek letters ("Apple" → "Αρρα δω"): the `el`
+  model only emits Greek script and ML Kit has no mixed Greek/Latin model. Options for Phase 3:
+  a Latin toggle key, or also run the `en` model and show its top candidate as an extra chip
+  (second recognition ~100 ms, second model in RAM; measure in the keyboard first).
 - First misread (finger, 19 strokes, el): wrote "Καλημέρα αγάπη μου!", all 5 candidates read the
   final α of Καλημέρα as "ου"/"ους"; accents and the rest were right.
 - GitHub pushes sometimes fail with `remote: fatal error in commit_refs_rules`
