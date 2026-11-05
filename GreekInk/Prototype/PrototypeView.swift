@@ -17,10 +17,13 @@ struct PrototypeView: View {
                 .overlay(RoundedRectangle(cornerRadius: 12).strokeBorder(.separator))
             candidateRow
             actionRow
-            Text(vm.status)
-                .font(.caption.monospaced())
-                .foregroundStyle(.secondary)
-                .frame(maxWidth: .infinity, alignment: .leading)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(vm.status)
+                Text("touch: \(vm.lastTouch)")
+            }
+            .font(.caption.monospaced())
+            .foregroundStyle(.secondary)
+            .frame(maxWidth: .infinity, alignment: .leading)
             Divider()
             misreadList
         }

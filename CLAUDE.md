@@ -111,6 +111,26 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
 - ML Kit 8.0.0 bug: `DigitalInkRecognitionContext(preContext: nil, …)` crashes the recognizer
   thread (strlen on NULL). Always pass `preContext ?? ""`. Crash logs come off the iPad with
   `xcrun devicectl device copy from --domain-type systemCrashLogs --source . --destination <dir>`.
+- ML Kit model storage (seen on the iPad): the app's own
+  `Library/Application Support/com.google.mlkit.vision.digitalinkrecognition/`.
+  `UnzippedModelCache/` holds the Greek model as 3 files, ~23 MB (`el.*.compact.fst` 21.5 MB,
+  `indy_lstm.greek.*.tflite` 1.8 MB, a small recospec). `Download/` keeps MDD download state
+  (zipped FileData ~12 MB, FileGroupMetadata, `MDDCore_Lock_File.internal`, so MDD may want
+  write access). The keyboard has its own container, so Phase 2 must test pointing ML Kit at a
+  shared copy (e.g. symlink from the keyboard's Application Support into the App Group) before
+  falling back to Full Access.
+- Files can be pulled off the app without copy-paste:
+  `xcrun devicectl device copy from --device <udid> --domain-type appDataContainer
+  --domain-identifier com.tany4.greekink --source Documents/misreads.json --destination <file>`.
+  Copying the whole `Library` aborts on SplashBoard snapshots; copy sub-folders. The prototype
+  app also writes `Documents/diagnostics.log` (touch events, recognition timing, misreads).
+- Pencil in the full-screen app: with `isMultipleTouchEnabled = false` the resting palm took the
+  only touch slot and Pencil touches were never delivered (the Phase 0 keyboard sat at the
+  bottom edge, so no palm). The canvas now keeps multi-touch on, lets a Pencil touch replace a
+  finger/palm stroke, ignores finger touches for 1.5 s after Pencil contact, and discards
+  cancelled touches instead of committing them.
+- First misread (finger, 19 strokes, el): wrote "Καλημέρα αγάπη μου!", all 5 candidates read the
+  final α of Καλημέρα as "ου"/"ους"; accents and the rest were right.
 - GitHub pushes sometimes fail with `remote: fatal error in commit_refs_rules`
   (GitHub-side, intermittent). Just retry.
 

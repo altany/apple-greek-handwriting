@@ -3,19 +3,29 @@ import UIKit
 /// Drawing surface shared by the app and the keyboard. Records strokes with timestamps
 /// (what ML Kit needs) and renders them. Pencil and finger both work; coalesced touches
 /// give every Pencil sample, not one per frame.
+///
+/// Palm handling: multi-touch stays enabled so a Pencil touch is still delivered while the
+/// writing hand rests on the glass. A Pencil touch always wins over a finger/palm stroke that
+/// started first, extra touches during a stroke are ignored, and finger touches that start
+/// shortly after Pencil contact are treated as the palm and ignored.
 final class InkCanvasView: UIView {
 
     var onStrokeBegan: (() -> Void)?
     var onStrokeEnded: (() -> Void)?
+    /// Diagnostics only: one line per touch began/ended/cancelled, with what the view decided.
+    var onTouchEvent: ((String) -> Void)?
 
     var lineWidth: CGFloat = 3 { didSet { committedLayer.lineWidth = lineWidth; activeLayer.lineWidth = lineWidth } }
     var showsGuideline = true { didSet { setNeedsLayout() } }
+    /// Finger touches that start within this many seconds of the last Pencil contact are ignored.
+    var palmGracePeriod: TimeInterval = 1.5
 
     private(set) var strokes: [InkStroke] = []
 
     private var activeTouch: UITouch?
     private var activePoints: [InkPoint] = []
     private var activePath = UIBezierPath()
+    private var lastPencilTimestamp: TimeInterval = -.infinity
 
     private let committedPath = UIBezierPath()
     private let committedLayer = CAShapeLayer()
@@ -24,7 +34,8 @@ final class InkCanvasView: UIView {
 
     override init(frame: CGRect) {
         super.init(frame: frame)
-        isMultipleTouchEnabled = false
+        // Must stay on: with it off, a palm that lands first swallows every later Pencil touch.
+        isMultipleTouchEnabled = true
         backgroundColor = .systemBackground
         for layer in [committedLayer, activeLayer] {
             layer.fillColor = nil
@@ -85,17 +96,28 @@ final class InkCanvasView: UIView {
     // MARK: Touches
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard activeTouch == nil, let touch = touches.first else { return }
-        activeTouch = touch
-        let p = point(from: touch)
-        activePoints = [p]
-        activePath = UIBezierPath()
-        activePath.move(to: CGPoint(x: p.x, y: p.y))
-        onStrokeBegan?()
+        for touch in touches {
+            if let active = activeTouch {
+                if touch.type == .pencil, active.type != .pencil {
+                    report("began", touch, "pencil replaces \(Self.name(active.type)) stroke")
+                    discardActiveStroke()
+                } else {
+                    report("began", touch, "ignored, \(Self.name(active.type)) stroke in progress")
+                    continue
+                }
+            } else if touch.type != .pencil, touch.timestamp - lastPencilTimestamp < palmGracePeriod {
+                report("began", touch, "ignored, palm grace after pencil")
+                continue
+            } else {
+                report("began", touch, "stroke starts")
+            }
+            beginStroke(with: touch)
+        }
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first, touch == activeTouch else { return }
+        guard let touch = activeTouch, touches.contains(touch) else { return }
+        notePencil(touch)
         for sample in event?.coalescedTouches(for: touch) ?? [touch] {
             let p = point(from: sample)
             activePoints.append(p)
@@ -105,16 +127,36 @@ final class InkCanvasView: UIView {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first, touch == activeTouch else { return }
+        guard let touch = activeTouch, touches.contains(touch) else {
+            touches.forEach { report("ended", $0, "not the active touch") }
+            return
+        }
+        notePencil(touch)
         let p = point(from: touch)
         activePoints.append(p)
         activePath.addLine(to: CGPoint(x: p.x, y: p.y))
+        report("ended", touch, "stroke committed, \(activePoints.count) points")
         commitActiveStroke(touchType: touch.type)
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first, touch == activeTouch else { return }
-        commitActiveStroke(touchType: touch.type)
+        guard let touch = activeTouch, touches.contains(touch) else {
+            touches.forEach { report("cancelled", $0, "not the active touch") }
+            return
+        }
+        // The system cancels touches it decided were a palm or a gesture: drop, don't commit.
+        report("cancelled", touch, "stroke discarded")
+        discardActiveStroke()
+    }
+
+    private func beginStroke(with touch: UITouch) {
+        activeTouch = touch
+        notePencil(touch)
+        let p = point(from: touch)
+        activePoints = [p]
+        activePath = UIBezierPath()
+        activePath.move(to: CGPoint(x: p.x, y: p.y))
+        onStrokeBegan?()
     }
 
     private func commitActiveStroke(touchType: UITouch.TouchType) {
@@ -127,6 +169,33 @@ final class InkCanvasView: UIView {
         activePoints.removeAll()
         activeTouch = nil
         onStrokeEnded?()
+    }
+
+    /// Drops the stroke in progress without recording it. Still reports "ended" so the owner
+    /// can reschedule recognition it paused when the stroke began.
+    private func discardActiveStroke() {
+        activeLayer.path = nil
+        activePoints.removeAll()
+        activeTouch = nil
+        onStrokeEnded?()
+    }
+
+    private func notePencil(_ touch: UITouch) {
+        if touch.type == .pencil { lastPencilTimestamp = touch.timestamp }
+    }
+
+    private func report(_ phase: String, _ touch: UITouch, _ decision: String) {
+        onTouchEvent?("\(phase) \(Self.name(touch.type)) r=\(Int(touch.majorRadius)) → \(decision)")
+    }
+
+    static func name(_ type: UITouch.TouchType) -> String {
+        switch type {
+        case .direct: return "finger"
+        case .pencil: return "pencil"
+        case .indirect: return "indirect"
+        case .indirectPointer: return "pointer"
+        @unknown default: return "other(\(type.rawValue))"
+        }
     }
 
     private func point(from touch: UITouch) -> InkPoint {

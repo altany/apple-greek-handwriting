@@ -24,6 +24,7 @@ final class PrototypeViewModel: ObservableObject {
     @Published private(set) var status = "Write something"
     @Published private(set) var isRecognizing = false
     @Published private(set) var strokeCount = 0
+    @Published private(set) var lastTouch = "none yet"
 
     private var autoTask: Task<Void, Never>?
 
@@ -33,10 +34,15 @@ final class PrototypeViewModel: ObservableObject {
         self.language = InkLanguage.saved
         canvas.onStrokeBegan = { [weak self] in self?.autoTask?.cancel() }
         canvas.onStrokeEnded = { [weak self] in self?.strokeEnded() }
+        canvas.onTouchEvent = { [weak self] line in
+            self?.lastTouch = line
+            DiagnosticsLog.shared.log("touch \(line)")
+        }
     }
 
     func onAppear() {
         ensureModel()
+        DiagnosticsLog.shared.log("app appeared, language \(language.rawValue), model \(modelState.label)")
     }
 
     var modelState: ModelState { service.modelStates[language] ?? .notDownloaded }
@@ -74,8 +80,10 @@ final class PrototypeViewModel: ObservableObject {
             let ms = Int(Date().timeIntervalSince(started) * 1000)
             let points = strokes.reduce(0) { $0 + $1.points.count }
             status = "\(trigger): \(result.count) candidates in \(ms) ms · \(strokes.count) strokes, \(points) points"
+            DiagnosticsLog.shared.log("recognize \(trigger) \(language.rawValue): \(ms) ms, \(strokes.count) strokes, \(points) points, top: \(result.first?.text ?? "-")")
         } catch {
             status = "Error: \(error.localizedDescription)"
+            DiagnosticsLog.shared.log("recognize \(trigger) failed: \(error)")
         }
         isRecognizing = false
     }
@@ -105,5 +113,6 @@ final class PrototypeViewModel: ObservableObject {
         log.add(MisreadEntry(date: Date(), language: language.rawValue, expected: expected,
                              candidates: candidates.map(\.text), strokes: strokeCount))
         status = "Logged misread (\(log.entries.count) total)"
+        DiagnosticsLog.shared.log("misread: wrote \(expected); got \(candidates.map(\.text).joined(separator: " / "))")
     }
 }
