@@ -4,26 +4,20 @@ Personal iPad keyboard: handwrite Greek with Apple Pencil, get text in any app.
 Apple's Scribble has no Greek and no API to add one, so this is a custom keyboard.
 Personal use only. No App Store.
 
-## Status (end of 2026-11-05) — read this first
-- Phase 0 and Phase 1 are DONE and accepted by the user. The prototype app works on the
-  iPad: Pencil and finger writing, auto-recognition 600 ms after the last stroke, top-5
-  candidates, Copy / Undo / Clear, el/en switch, model download status, misread log, and a
-  Setup tab (App Group test, model storage report, memory). Everything is committed and pushed.
-- NEXT: Phase 2 (keyboard MVP). The user has NOT yet said "go": ask, then do the risky part
-  first, in this order.
-  1. Model sharing. Host app copies ML Kit's model folder (path in Findings) into the App
-     Group container; the keyboard points its own `Library/Application Support` at that copy
-     (symlink, or whatever ML Kit accepts) and must pass `isModelDownloaded` AND a real
-     recognition without Full Access. If ML Kit refuses (likely culprit: the MDD lock file in
-     `Download/`), fall back to downloading with Full Access on, and tell the user plainly.
-  2. Measure keyboard memory with the model loaded (`MemoryFootprint.summary()`; baseline was
-     8.3 MB used / 81.7 MB headroom). Decide Plan B only on a measured number.
-  3. Replace the Phase 0 `KeyboardViewController` with the real keyboard, reusing `Shared/`:
-     `InkCanvasView` writing strip, candidate bar (3–5), space, backspace, return, globe
-     (`handleInputModeList`), a Greek/Latin toggle key (switches el/en model), insert via
-     `textDocumentProxy`, commit the top candidate after a pause or on tap, auto spaces,
-     light/dark, ~300 pt height. Recognise per word/pause, not whole sentences.
-  4. Host app Setup screen: enable-keyboard steps, model status, "copy model for keyboard".
+## Status (2026-11-05, evening) — read this first
+- Phase 0 and Phase 1 are DONE and accepted. Phase 2 (keyboard MVP) is IN PROGRESS: the user
+  said "go". Built and installed, waiting for the first keyboard test on the iPad:
+  1. Model sharing: BUILT, NOT YET VERIFIED in the keyboard. The app copies ML Kit's folder into
+     the App Group (`Shared/Recognition/ModelSharing.swift`, verified: "model export auto: el+en,
+     74894314 bytes" in the app log). The keyboard copies it into its own container before
+     touching ML Kit, adding metadata files renamed to its bundle id. Its log says whether
+     `isModelDownloaded` passes and whether the warm-up recognition works. If ML Kit refuses,
+     fall back to downloading with Full Access on, and tell the user plainly.
+  2. Memory with the model loaded: logged by the keyboard after the warm-up ("warm-up el OK …,
+     memory: …"). Decide Plan B only on that number.
+  3. Real keyboard: BUILT (`GreekInkKeyboard/KeyboardViewController.swift`), not yet tried.
+  4. Host Setup screen: enable steps, model status, shared-copy status + "Copy model for keyboard".
+  After the test: pull the keyboard's log (command in Findings), record the result here.
 - Decided along the way: the Greek/Latin toggle key is Phase 2. Running the `en` model as well
   and showing its top candidate as an extra chip is a Phase 3 experiment (measure memory first).
   Phase 4 stays optional: ask first, report cost and latency before building.
@@ -50,14 +44,18 @@ Personal use only. No App Store.
   palm-size filter, light/dark), `Recognition/InkRecognitionService.swift` (ML Kit wrapper:
   model download/delete/state, `recognize(_:language:preContext:writingArea:maxResults:)`),
   `Recognition/InkLanguage.swift` (el/en, saved in UserDefaults),
-  `Recognition/ModelStorageInspector.swift`, `AppGroup.swift` (container, ping write/read),
+  `Recognition/ModelStorageInspector.swift`, `AppGroup.swift` (container URL),
   `MemoryFootprint.swift`.
 - `GreekInk/` (host app, SwiftUI): `ContentView.swift` (Write/Setup tabs, owns the objects),
   `Prototype/` (PrototypeView + PrototypeViewModel, `InkCanvas` wrapper, `MisreadLog` →
-  Documents/misreads.json, `DiagnosticsLog` → Documents/diagnostics.log),
+  Documents/misreads.json),
   `Setup/SetupView.swift`.
-- `GreekInkKeyboard/`: still the Phase 0 test keyboard (`KeyboardViewController.swift`,
-  `InkTestView.swift`). Phase 2 replaces it.
+- `GreekInkKeyboard/KeyboardViewController.swift`: the Phase 2 keyboard (writing strip,
+  candidate bar, globe, ΕΛ/EN, space, backspace, return). Pause 800 ms → recognise → insert top
+  candidate with auto space; tapping an alternative replaces the inserted word.
+- `Shared/Recognition/ModelSharing.swift` (app → App Group → keyboard model copy),
+  `Shared/Diagnostics/DiagnosticsLog.swift` (each process writes its own Documents/diagnostics.log),
+  `GreekInk/Setup/KeyboardModelExporter.swift` (auto copy when downloaded models change).
 - `project.yml` is the source of truth for targets and settings (regenerate after edits);
   `Podfile` pins ML Kit 9.0.0; `scripts/install-ipad.sh` builds, installs, launches.
 
@@ -209,6 +207,15 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
   (leading α of αγάπη dropped, μ → τ/κ). Accents, dialytika and capitals right both times.
   One candidate contained a Latin "g" ("gάπη"), so the el model can emit some Latin letters,
   but its language model strongly prefers Greek words.
+- ML Kit's MDD metadata files are named `<bundle id>.com.google.mlkit.mdd.cellular.<model
+  name>.<lang>.<number>` (e.g. `com.tany4.greekink.com.google…el.0001793897628892587`), protobuf
+  inside, no absolute paths (only file hashes + dl.google.com URLs). Folder also has
+  `Download/FileData/<sha1>` (the zips), `FileGroupIsolation/`, `LatestCompletedLookup/`,
+  `scratch/` (download sessions, not copied). App preferences hold nothing ML Kit needs.
+- The keyboard's own container is readable from the Mac: `--domain-type appDataContainer
+  --domain-identifier com.tany4.greekink.keyboard --source Documents/diagnostics.log`.
+  `--domain-type appGroupDataContainer` only lists the group's Library folder, not files the
+  app wrote at the group root, so check the App Group copy through the app log instead.
 - GitHub pushes sometimes fail with `remote: fatal error in commit_refs_rules`
   (GitHub-side, intermittent). Just retry.
 
