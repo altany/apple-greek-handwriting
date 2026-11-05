@@ -108,6 +108,9 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
 - Without Full Access the keyboard can READ the App Group container but NOT write to it
   ("no permission" on write). So: host app downloads the model, keyboard reads it.
   Phase 2 must test whether ML Kit can load a model from a read-only shared path.
+- ML Kit 8.0.0 bug: `DigitalInkRecognitionContext(preContext: nil, …)` crashes the recognizer
+  thread (strlen on NULL). Always pass `preContext ?? ""`. Crash logs come off the iPad with
+  `xcrun devicectl device copy from --domain-type systemCrashLogs --source . --destination <dir>`.
 - GitHub pushes sometimes fail with `remote: fatal error in commit_refs_rules`
   (GitHub-side, intermittent). Just retry.
 

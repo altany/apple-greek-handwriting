@@ -129,7 +129,9 @@ final class InkRecognitionService: ObservableObject {
             })
         })
         let area = writingArea.map { WritingArea(width: Float($0.width), height: Float($0.height)) }
-        let context = DigitalInkRecognitionContext(preContext: preContext, writingArea: area)
+        // ML Kit 8.0.0 crashes (strlen on NULL inside recognitionForInk:context:error:) when
+        // preContext is nil, even though the header marks it nullable. Always pass a string.
+        let context = DigitalInkRecognitionContext(preContext: preContext ?? "", writingArea: area)
 
         return try await withCheckedThrowingContinuation { continuation in
             recognizer.recognize(ink: ink, context: context) { result, error in
