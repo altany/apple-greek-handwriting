@@ -5,8 +5,8 @@ Apple's Scribble has no Greek and no API to add one, so this is a custom keyboar
 Personal use only. No App Store.
 
 ## Status (2026-11-05, late evening) — read this first
-- Phase 0 and Phase 1 are DONE and accepted. Phase 2 (keyboard MVP) is BUILT and its risky part
-  is VERIFIED on the iPad, without Full Access (first keyboard test, 21:29):
+- Phase 0, 1 and 2 are DONE; the user closed Phase 2 as is. NEXT: Phase 3, not started. The user
+  has NOT said "go": ask first. Phase 2 results (first keyboard test, 21:29, no Full Access):
   - Model sharing works: app copies ML Kit's folder into the App Group, keyboard copies it into
     its own container (13 ms, APFS clone) and adds metadata files renamed to its bundle id.
     `isModelDownloaded` = true for el and en, warm-up recognition OK. Full Access not needed.
@@ -15,8 +15,11 @@ Personal use only. No App Store.
   - Timing in the keyboard: warm-up 53 ms, 12 strokes / 1193 points recognised in 93 ms.
   - Bug found and fixed: only 1 candidate showed (warm-up cached a maxResults-1 recognizer).
     Reinstalled; the 5-candidate bar is not yet re-tested by the user.
-- Open user question: how to fix a misread word in the middle or at the start of the text (the
-  candidate bar only swaps the LAST inserted word). Options offered, see the reply of that day.
+- Fixing a misread word in the middle or at the start: today only by placing the cursor,
+  backspace, rewrite (the candidate bar swaps only the LAST inserted word). Offered and parked
+  for Phase 3, user said "stop here" for now: (a) remember candidates of recent words and show
+  them again when the cursor is in/after one, (b) drag on the space bar to move the cursor,
+  (c) write over a selected word with safe spacing.
 - Not yet tried by the user: ΕΛ/EN toggle, held backspace, return, light/dark, final sigma.
 - Decided along the way: the Greek/Latin toggle key is Phase 2. Running the `en` model as well
   and showing its top candidate as an extra chip is a Phase 3 experiment (measure memory first).
@@ -132,12 +135,13 @@ the official sample (github.com/googlesamples/mlkit, `ios/quickstarts/digitalink
 - Phase 1 — DONE: prototype app only. Canvas, top-5 candidates, Copy, Clear, el/en
   switch. Auto-recognise ~600ms after the last stroke + manual button. Model
   download with visible status. Log misreads.
-- Phase 2 — NEXT (see Status): keyboard MVP. Writing strip, candidate bar (3–5), space, backspace,
+- Phase 2 — DONE: keyboard MVP. Writing strip, candidate bar (3–5), space, backspace,
   return, globe key (`advanceToNextInputMode`). Insert via `textDocumentProxy`.
   Commit top candidate after a pause or on tap. Auto spaces. iPad height,
   light/dark. Host app setup screen + model status. Measure memory on device.
-- Phase 3: pre-context (last ~20 chars of `documentContextBeforeInput`) + writing
-  area size to ML Kit. Scribble-to-delete gesture. Punctuation, numbers, haptics.
+- Phase 3 — NEXT, ask first: pre-context (last ~20 chars of `documentContextBeforeInput`) + writing
+  area size to ML Kit. Scribble-to-delete gesture. Punctuation, numbers, haptics. Candidates:
+  fixing words mid-text (see Status), extra `en` chip (measure first).
 - Phase 4 (optional, ask first): Claude API "clean up". Needs Full Access + API
   key in Keychain. Report cost and latency before building.
 
