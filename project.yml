@@ -95,7 +95,7 @@ targets:
             IsASCIICapable: false
             PrefersRightToLeft: false
             PrimaryLanguage: el
-            # Phase 0: Full Access OFF, so we learn what the App Group allows without it.
+            # Full Access OFF: the model comes from the app via the App Group (Shared/Recognition/ModelSharing.swift).
             RequestsOpenAccess: false
     entitlements:
       path: GreekInkKeyboard/GreekInkKeyboard.entitlements
