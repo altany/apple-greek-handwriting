@@ -1,0 +1,31 @@
+# --- Local-only config (Personal Team ID, bundle prefix). Never commit.
+Local.xcconfig
+
+# --- Tools downloaded into the project (XcodeGen binary)
+tools/
+
+# --- Xcode
+xcuserdata/
+*.xcuserstate
+*.xcscmblueprint
+DerivedData/
+build/
+*.ipa
+*.dSYM
+*.dSYM.zip
+*.xcresult
+.swiftpm/
+*.playground/**/timeline.xctimeline
+*.moved-aside
+
+# --- CocoaPods (Podfile.lock IS committed on purpose)
+Pods/
+
+# --- macOS
+.DS_Store
+
+# --- Secrets
+*.pem
+*.p12
+*.mobileprovision
+.env

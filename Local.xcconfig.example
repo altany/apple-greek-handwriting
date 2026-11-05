@@ -1,0 +1,10 @@
+// Copy this file to Local.xcconfig (git-ignored) and fill in your values.
+// Local.xcconfig is the ONLY place the signing team is set, so the employer
+// team can never be picked by accident.
+
+// 10-character Team ID of your free "Personal Team".
+// Xcode > Settings > Accounts > your Apple ID > "<Your Name> (Personal Team)".
+DEVELOPMENT_TEAM = XXXXXXXXXX
+
+// Bundle ID prefix. Targets append ".greekink" and ".greekink.keyboard".
+BUNDLE_ID_PREFIX = com.tany4
