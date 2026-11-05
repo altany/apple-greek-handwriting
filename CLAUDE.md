@@ -4,6 +4,63 @@ Personal iPad keyboard: handwrite Greek with Apple Pencil, get text in any app.
 Apple's Scribble has no Greek and no API to add one, so this is a custom keyboard.
 Personal use only. No App Store.
 
+## Status (end of 2026-11-05) — read this first
+- Phase 0 and Phase 1 are DONE and accepted by the user. The prototype app works on the
+  iPad: Pencil and finger writing, auto-recognition 600 ms after the last stroke, top-5
+  candidates, Copy / Undo / Clear, el/en switch, model download status, misread log, and a
+  Setup tab (App Group test, model storage report, memory). Everything is committed and pushed.
+- NEXT: Phase 2 (keyboard MVP). The user has NOT yet said "go": ask, then do the risky part
+  first, in this order.
+  1. Model sharing. Host app copies ML Kit's model folder (path in Findings) into the App
+     Group container; the keyboard points its own `Library/Application Support` at that copy
+     (symlink, or whatever ML Kit accepts) and must pass `isModelDownloaded` AND a real
+     recognition without Full Access. If ML Kit refuses (likely culprit: the MDD lock file in
+     `Download/`), fall back to downloading with Full Access on, and tell the user plainly.
+  2. Measure keyboard memory with the model loaded (`MemoryFootprint.summary()`; baseline was
+     8.3 MB used / 81.7 MB headroom). Decide Plan B only on a measured number.
+  3. Replace the Phase 0 `KeyboardViewController` with the real keyboard, reusing `Shared/`:
+     `InkCanvasView` writing strip, candidate bar (3–5), space, backspace, return, globe
+     (`handleInputModeList`), a Greek/Latin toggle key (switches el/en model), insert via
+     `textDocumentProxy`, commit the top candidate after a pause or on tap, auto spaces,
+     light/dark, ~300 pt height. Recognise per word/pause, not whole sentences.
+  4. Host app Setup screen: enable-keyboard steps, model status, "copy model for keyboard".
+- Decided along the way: the Greek/Latin toggle key is Phase 2. Running the `en` model as well
+  and showing its top candidate as an extra chip is a Phase 3 experiment (measure memory first).
+  Phase 4 stays optional: ask first, report cost and latency before building.
+- The signed app and keyboard stop launching on 2026-11-12 (7-day profiles). Re-run
+  `scripts/install-ipad.sh` with the iPad unlocked; nothing else is needed.
+- Already set up on this Mac, do not ask for it again: `Local.xcconfig` holds the Personal
+  Team ID and `BUNDLE_ID_PREFIX = com.tany4`; XcodeGen is in `tools/xcodegen/bin/`;
+  CocoaPods works; the iPad is paired and trusted.
+
+## How a test round works
+- `scripts/install-ipad.sh` builds, installs and launches. Launch fails with "Locked" when the
+  iPad has gone to sleep: the install still succeeded, ask the user to unlock it and open
+  GreekInk.
+- The user writes on the iPad and says "done". Then pull `Documents/diagnostics.log` and
+  `Documents/misreads.json` with devicectl (command in Findings) instead of asking for pastes.
+  After a crash, pull the system crash logs (.ips JSON) the same way.
+- The user answers option questions through the dialog, usually with one word. Approvals given
+  so far covered only what was asked (e.g. deleting Xcode DerivedData, not simulators or
+  DeviceSupport). Disk on the Mac was tight: ~11 GB free after that cleanup.
+
+## Code map
+- `Shared/` (compiled into app AND keyboard): `Ink/InkStroke.swift` (point/stroke types),
+  `Ink/InkCanvasView.swift` (UIKit canvas: strokes with timestamps, Pencil beats palm,
+  palm-size filter, light/dark), `Recognition/InkRecognitionService.swift` (ML Kit wrapper:
+  model download/delete/state, `recognize(_:language:preContext:writingArea:maxResults:)`),
+  `Recognition/InkLanguage.swift` (el/en, saved in UserDefaults),
+  `Recognition/ModelStorageInspector.swift`, `AppGroup.swift` (container, ping write/read),
+  `MemoryFootprint.swift`.
+- `GreekInk/` (host app, SwiftUI): `ContentView.swift` (Write/Setup tabs, owns the objects),
+  `Prototype/` (PrototypeView + PrototypeViewModel, `InkCanvas` wrapper, `MisreadLog` →
+  Documents/misreads.json, `DiagnosticsLog` → Documents/diagnostics.log),
+  `Setup/SetupView.swift`.
+- `GreekInkKeyboard/`: still the Phase 0 test keyboard (`KeyboardViewController.swift`,
+  `InkTestView.swift`). Phase 2 replaces it.
+- `project.yml` is the source of truth for targets and settings (regenerate after edits);
+  `Podfile` pins ML Kit 9.0.0; `scripts/install-ipad.sh` builds, installs, launches.
+
 ## Who I'm working with
 - Senior mobile engineer (12 years, mostly React Native + TypeScript). Explain
   iOS-native details briefly only when they matter. Short, plain explanations.
@@ -47,31 +104,37 @@ Personal use only. No App Store.
   ~10 new App IDs per week, max 3 self-signed apps on the device at once.
 
 ## Known risks (verify, don't assume)
-1. Memory: measured limit ~90MB on the iPad Air M1 (see Findings), not 48–60MB. ML Kit model
-   alone ~20MB in RAM. Measure on the real iPad as soon as the keyboard runs.
+1. Memory [baseline measured, model-loaded number still missing]: limit ~90MB on the iPad
+   Air M1 (see Findings), not 48–60MB. ML Kit model alone ~20MB in RAM. Measure on the real
+   iPad as soon as the keyboard loads the model.
 2. Network: without "Allow Full Access" a keyboard extension has no network and
    cannot download the model. Plan (a): host app downloads, shares via App Group.
    Plan (b): extension downloads with Full Access on. App Groups may not work on
    a free Personal Team. A keyboard without Full Access may only read (not
    write) the App Group container. ML Kit picks its own model folder. Test all.
-3. ML Kit may not be extension-safe (APPLICATION_EXTENSION_API_ONLY). Test.
+   [App Groups on the Personal Team: VERIFIED. Keyboard read-only in the group: VERIFIED.
+   ML Kit loading a model from a shared path: NOT TESTED, first task of Phase 2.]
+3. ML Kit may not be extension-safe (APPLICATION_EXTENSION_API_ONLY). [Links and builds:
+   VERIFIED. Recognition running inside the extension: NOT TESTED.]
 4. Apple Pencil in a keyboard extension: confirm touches arrive with
-   `UITouch.TouchType.pencil` and drawing is smooth. Support finger too.
+   `UITouch.TouchType.pencil` and drawing is smooth. Support finger too. [VERIFIED in the
+   Phase 0 keyboard and in the app; palm handling lives in InkCanvasView, see Findings.]
 5. Greek accuracy: accents (τόνοι), dialytika, final sigma (ς), capitals.
-   Only the user can judge, by testing. Keep a log of misreads.
+   Only the user can judge, by testing. Keep a log of misreads. [Ongoing: long sentences
+   good, 2 misreads logged, both single letters. Final sigma still untested.]
 
 Never guess ML Kit API names. Check the official docs
 (https://developers.google.com/ml-kit/vision/digital-ink-recognition/ios) and
 the official sample (github.com/googlesamples/mlkit, `ios/quickstarts/digitalinkrecognition`).
 
 ## Phases
-- Phase 0 (setup): project + keyboard target, CocoaPods, .gitignore, git, GitHub,
+- Phase 0 (setup) — DONE: project + keyboard target, CocoaPods, .gitignore, git, GitHub,
   CLAUDE.md, README.md. First device test: empty app + empty keyboard + App
   Group, to catch signing problems early.
-- Phase 1: prototype app only. Canvas, top-5 candidates, Copy, Clear, el/en
+- Phase 1 — DONE: prototype app only. Canvas, top-5 candidates, Copy, Clear, el/en
   switch. Auto-recognise ~600ms after the last stroke + manual button. Model
   download with visible status. Log misreads.
-- Phase 2: keyboard MVP. Writing strip, candidate bar (3–5), space, backspace,
+- Phase 2 — NEXT (see Status): keyboard MVP. Writing strip, candidate bar (3–5), space, backspace,
   return, globe key (`advanceToNextInputMode`). Insert via `textDocumentProxy`.
   Commit top candidate after a pause or on tap. Auto spaces. iPad height,
   light/dark. Host app setup screen + model status. Measure memory on device.

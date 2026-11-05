@@ -89,12 +89,14 @@ iPad at once, and about 10 new App IDs per week.
 ```
 project.yml            XcodeGen spec (targets, Info.plist, entitlements)
 Local.xcconfig         Team ID + bundle prefix (git-ignored; copy from .example)
-GreekInk/              Host app (SwiftUI): setup steps, model download, tests
-GreekInkKeyboard/      Keyboard extension (UIKit): the actual keyboard
-Shared/                Code compiled into both targets (App Group, memory)
-Podfile, Podfile.lock  ML Kit via CocoaPods (from Phase 1)
+GreekInk/              Host app (SwiftUI): Write tab (prototype canvas, candidates,
+                       misread log), Setup tab (model download, App Group test, memory)
+GreekInkKeyboard/      Keyboard extension (UIKit); still the Phase 0 test keyboard
+Shared/                Compiled into both targets: ink canvas, ML Kit wrapper, App Group, memory
+scripts/install-ipad.sh  Build, install and launch on the iPad
+Podfile, Podfile.lock  ML Kit via CocoaPods
 tools/                 XcodeGen binary (git-ignored)
-CLAUDE.md              Decisions, constraints, phases
+CLAUDE.md              Decisions, status, findings, next step (read first)
 ```
 
 ## Troubleshooting
