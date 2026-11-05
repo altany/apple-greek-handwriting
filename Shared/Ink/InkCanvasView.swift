@@ -19,6 +19,9 @@ final class InkCanvasView: UIView {
     var showsGuideline = true { didSet { setNeedsLayout() } }
     /// Finger touches that start within this many seconds of the last Pencil contact are ignored.
     var palmGracePeriod: TimeInterval = 1.5
+    /// Finger touches wider than this (points) are treated as a resting palm and ignored.
+    /// Measured on the iPad Air: fingertip ~20–25, palm 52–62. iPadOS reports 0 for the Pencil.
+    var palmRadius: CGFloat = 40
 
     private(set) var strokes: [InkStroke] = []
 
@@ -108,6 +111,9 @@ final class InkCanvasView: UIView {
             } else if touch.type != .pencil, touch.timestamp - lastPencilTimestamp < palmGracePeriod {
                 report("began", touch, "ignored, palm grace after pencil")
                 continue
+            } else if touch.type == .direct, touch.majorRadius > palmRadius {
+                report("began", touch, "ignored, too wide for a finger")
+                continue
             } else {
                 report("began", touch, "stroke starts")
             }
@@ -117,6 +123,12 @@ final class InkCanvasView: UIView {
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = activeTouch, touches.contains(touch) else { return }
+        if touch.type == .direct, touch.majorRadius > palmRadius {
+            // A finger that flattens into a palm mid-stroke.
+            report("moved", touch, "discarded, grew too wide for a finger")
+            discardActiveStroke()
+            return
+        }
         notePencil(touch)
         for sample in event?.coalescedTouches(for: touch) ?? [touch] {
             let p = point(from: sample)

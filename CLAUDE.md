@@ -130,6 +130,10 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
   finger/palm stroke, ignores finger touches for 1.5 s after Pencil contact, and discards
   cancelled touches instead of committing them.
   Confirmed on the iPad: 101 Pencil strokes in a row, all delivered and committed.
+- A palm that rests on the glass BEFORE the Pencil arrives is a normal finger touch to iPadOS
+  (system palm rejection only kicks in once the Pencil is on or near the screen). Measured
+  `majorRadius` on the iPad Air: palm 52–62 pt, Pencil 0; a fingertip is ~20–25 pt. The canvas
+  ignores direct touches wider than 40 pt (`palmRadius`), at touch-down and mid-stroke.
 - Phase 1 result: on the iPad Air M1 recognition takes ~50 ms for 3 strokes and ~140 ms for a
   93-stroke / 7380-point sentence (ML Kit call only). Long Greek sentences come out right,
   including tonos, dialytika with tonos (Μαΐου) and capitals. Final sigma not tested yet.
