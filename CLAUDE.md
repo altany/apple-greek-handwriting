@@ -83,8 +83,30 @@ the official sample (github.com/googlesamples/mlkit, `ios/quickstarts/digitalink
 Plan B: if the keyboard can't fit in memory, keep the standalone app (write,
 copy, paste) and propose a Share/Action extension or a Shortcut.
 
+## Findings so far (Phase 0, 2026-11-05)
+- Signing: certificate "Apple Development: <apple-id email> (…)" with O = the user's own
+  name, OU = Personal Team ID → that is how to tell the Personal Team from the employer
+  team. Team ID is only in Local.xcconfig.
+- App Groups DO work on the free Personal Team: the Xcode-managed profiles for both
+  targets carry `group.com.tany4.greekink`. Profiles expire after 7 days.
+- `$(BUNDLE_ID_PREFIX)` in .entitlements is expanded by Xcode at signing time (verified
+  with `codesign -d --entitlements`).
+- Xcode 27 no longer caches the team list in its preferences; to get a Team ID, pick the
+  team once in Signing & Capabilities and read DEVELOPMENT_TEAM from the pbxproj.
+- XcodeGen 2.46 writes pbxproj objectVersion 77; CocoaPods 1.15 only reads ≤ 63, so
+  `project.yml` has a postGenCommand that rewrites it to 60. Also `fileGroups` must list
+  Local.xcconfig or CocoaPods complains about an orphan file reference.
+- ENABLE_USER_SCRIPT_SANDBOXING must be NO (CocoaPods copy scripts write into Pods/).
+- ML Kit links into the keyboard extension with APPLICATION_EXTENSION_API_ONLY = YES,
+  no build errors. Debug keyboard binary is ~33MB on disk (ML Kit is static); 7 small
+  dynamic frameworks are embedded in the app and shared with the extension.
+- iPad: UDID <IPAD-UDID>, "iPad". Developer Mode enabled.
+  First launch needs Settings > General > VPN & Device Management > trust.
+- GitHub pushes sometimes fail with `remote: fatal error in commit_refs_rules`
+  (GitHub-side, intermittent). Just retry.
+
 ## Commands
 - Regenerate project: `tools/xcodegen/bin/xcodegen generate && pod install`
 - Open: `open GreekInk.xcworkspace`
-- Build for device (see README for signing prerequisites):
-  `xcodebuild -workspace GreekInk.xcworkspace -scheme GreekInk -destination 'platform=iOS,name=<iPad name>' -allowProvisioningUpdates build`
+- Build + install + launch on the iPad: `scripts/install-ipad.sh` (see README).
+- Unsigned compile check: `xcodebuild -workspace GreekInk.xcworkspace -scheme GreekInk -destination 'generic/platform=iOS' -derivedDataPath build/DerivedData CODE_SIGNING_ALLOWED=NO build`
