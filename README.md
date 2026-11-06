@@ -76,8 +76,7 @@ team, and copy the ID Xcode writes into the project.
 The script `scripts/install-ipad.sh` does everything: builds the app and the keyboard with
 your Personal Team, installs them on the iPad and opens the app.
 
-1. Connect the iPad to the Mac with a USB cable (after the first time, the same Wi‑Fi also
-   works if the iPad shows up in `xcrun devicectl list devices`).
+1. Connect the iPad to the Mac with a USB cable.
 2. Unlock the iPad. The first time, tap **Trust** on the iPad when it asks about this Mac.
 3. In the project folder on the Mac, run:
 
