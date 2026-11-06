@@ -150,8 +150,8 @@ for live handwriting. Its Greek model is about 23 MB once unzipped.
 ## What's next
 
 - Phase 3 (in progress): context from the text before the cursor (done, being tested),
-  scribble-to-delete with ML Kit's gesture model (its labels are being logged first, because the
-  docs don't list them), punctuation and numbers.
+  scribble-to-delete (ML Kit's docs list a Greek gesture model, but the iOS SDK doesn't ship
+  one, so a zigzag is detected with a few lines of geometry instead), punctuation and numbers.
 - Haptics are out: the iPad Air has no vibration motor.
 - Investigating an App Store release (see `docs/app-store-investigation.md`).
 - Making the repository public.

@@ -11,10 +11,13 @@ Personal use only. No App Store.
     about to add (so ML Kit treats the ink as a new word), and trims/dedupes candidates. Per the
     docs ML Kit emits a leading space when it infers a word break from pre-context. Check the
     keyboard log ("pre-context …, candidates: "…"") for misreads and leading spaces.
-  - Gesture probe: `el-x-gesture` (tag from the ML Kit base-models table) downloadable in Setup,
-    shared with the keyboard, run on every word, labels + scores only LOGGED. The docs don't list
-    its labels; read them from the log, then build scribble-to-delete (scribble on the strip =
-    delete the last inserted word is the obvious meaning). If the tag fails to download, say so.
+  - Scribble to delete: ML Kit iOS 8.0.0 has NO gesture classifier. `el-x-gesture` fails as
+    "unknown model tag" on the iPad, and the SDK binary's built-in model list has only the text
+    languages plus zxx-Zsye-x-emoji, zxx-Zsym-x-autodraw, zxx-Zsym-x-shapes (checked with
+    `strings`). So `GreekInkKeyboard/ScribbleDetector.swift` detects a zigzag itself (one stroke,
+    ≥5 horizontal reversals, ≥50 pt wide, height ≤ 0.9 × width). With other ink on the strip it
+    erases the ink; on an empty strip it deletes the last word (+ the space before it). Every
+    stroke's verdict is logged ("stroke: … reversals …") to tune thresholds. Not yet tested.
   - Punctuation and numbers: no code yet; the user tests handwriting them first.
   - Haptics: dropped. The iPad Air has no Taptic Engine.
 - Phase 2 results (first keyboard test, 2026-11-05 21:29, no Full Access):
@@ -93,7 +96,7 @@ Personal use only. No App Store.
 - Native iOS app + custom keyboard extension, Swift. No React Native (a keyboard
   extension cannot afford its memory).
 - Recognition: Google ML Kit Digital Ink Recognition, on-device. Text model
-  `el` (Greek) and `en`. Gesture model `el-x-gesture` later. Input is strokes
+  `el` (Greek) and `en`. No gesture model on iOS (see Status); scribbles are detected in code. Input is strokes
   (x, y, t), not images. Model ~20MB, downloaded on first use.
 - Optional later (Phase 4, ask first): "clean up" button via the Claude API.
 - Bundle IDs: `com.tany4.greekink` (app), `com.tany4.greekink.keyboard`
@@ -240,6 +243,8 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
   --domain-identifier com.tany4.greekink.keyboard --source Documents/diagnostics.log`.
   `--domain-type appGroupDataContainer` only lists the group's Library folder, not files the
   app wrote at the group root, so check the App Group copy through the app log instead.
+- In the Claude desktop app's shell `pod install` crashes (Unicode normalization, ASCII-8BIT)
+  because LANG is unset. Run it with `LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8`.
 - GitHub pushes sometimes fail with `remote: fatal error in commit_refs_rules`
   (GitHub-side, intermittent). Just retry.
 

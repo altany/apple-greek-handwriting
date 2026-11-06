@@ -189,7 +189,6 @@ final class KeyboardViewController: UIInputViewController {
             log.log("recognize \(trigger) FAILED: \(error)")
             setStatus("error: \(error.localizedDescription)")
         }
-        await probeGesture(strokes, area: area)
     }
 
     /// The text ML Kit sees before the ink: the last 20 characters (ML Kit's limit) of what is
@@ -207,21 +206,6 @@ final class KeyboardViewController: UIInputViewController {
         return texts
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty && seen.insert($0).inserted }
-    }
-
-    /// Phase 3 test: runs the gesture classifier on the same strokes and only logs what it says,
-    /// to learn its labels (scribble, strike-through…) before building delete-by-scribble.
-    private func probeGesture(_ strokes: [InkStroke], area: CGSize) async {
-        guard let service, service.isDownloaded(tag: InkModelTag.greekGestures) else { return }
-        let started = Date()
-        do {
-            let result = try await service.classifyGesture(strokes, writingArea: area)
-            let ms = Int(Date().timeIntervalSince(started) * 1000)
-            let labels = result.map { c in c.score.map { String(format: "%@ (%.3f)", c.text, $0) } ?? c.text }
-            log.log("gesture probe: \(ms) ms, \(strokes.count) strokes: \(labels.joined(separator: " / ")), \(MemoryFootprint.summary())")
-        } catch {
-            log.log("gesture probe FAILED: \(error)")
-        }
     }
 
     /// Inserts `word` with a space before it unless the cursor is at the start, after a space,
@@ -288,6 +272,46 @@ final class KeyboardViewController: UIInputViewController {
         deleteRepeat = nil
     }
 
+    // MARK: Scribble to delete
+
+    /// A zigzag scribble is a command, not ink: with other ink on the strip it erases that ink,
+    /// on an empty strip it deletes the last word in the text.
+    private func strokeEnded() {
+        guard let last = canvas.strokes.last else { scheduleCommit(); return }
+        let verdict = ScribbleDetector.check(last)
+        log.log("stroke: \(last.points.count) points, \(verdict.summary)")
+        guard verdict.isScribble else { scheduleCommit(); return }
+        pauseTask?.cancel()
+        if canvas.strokes.count > 1 {
+            log.log("scribble: erased \(canvas.strokes.count - 1) strokes of ink")
+            canvas.clear()
+        } else {
+            canvas.clear()
+            deleteLastWord()
+        }
+    }
+
+    /// Deletes the word before the cursor and the space before it. Uses the last inserted word
+    /// when the text still ends with it, otherwise whatever word precedes the cursor.
+    private func deleteLastWord() {
+        let before = textDocumentProxy.documentContextBeforeInput ?? ""
+        var count: Int
+        if let commit = lastCommit, before.hasSuffix(commit.text) {
+            count = commit.text.count
+        } else {
+            let trimmed = before.reversed().drop { $0.isWhitespace }
+            let trailingSpaces = before.count - trimmed.count
+            count = trailingSpaces + trimmed.prefix { !$0.isWhitespace }.count
+        }
+        // Also remove one space in front of the word (the auto space), if there is one.
+        let rest = before.dropLast(count)
+        if rest.last == " " { count += 1 }
+        guard count > 0 else { log.log("scribble: nothing to delete"); return }
+        for _ in 0..<count { textDocumentProxy.deleteBackward() }
+        log.log("scribble: deleted \(count) characters (“\(before.suffix(count))”)")
+        clearCandidates()
+    }
+
     /// With ink on the strip, backspace removes the last stroke; otherwise one character.
     private func deleteOnce() {
         if !canvas.strokes.isEmpty {
@@ -348,7 +372,7 @@ final class KeyboardViewController: UIInputViewController {
         canvas.layer.borderWidth = 1
         canvas.layer.borderColor = UIColor.separator.cgColor
         canvas.onStrokeBegan = { [weak self] in self?.pauseTask?.cancel() }
-        canvas.onStrokeEnded = { [weak self] in self?.scheduleCommit() }
+        canvas.onStrokeEnded = { [weak self] in self?.strokeEnded() }
         registerForTraitChanges([UITraitUserInterfaceStyle.self]) { (vc: Self, _) in
             vc.canvas.layer.borderColor = UIColor.separator.cgColor
         }

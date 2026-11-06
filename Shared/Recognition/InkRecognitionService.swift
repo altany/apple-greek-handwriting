@@ -34,28 +34,21 @@ enum RecognitionError: LocalizedError {
     }
 }
 
-/// ML Kit model tags that are not text languages.
-enum InkModelTag {
-    /// Gesture classifier for Greek (tag from the ML Kit base-models table). What it returns
-    /// (scribble, strike-through…) is not documented: Phase 3 logs its output to find out.
-    static let greekGestures = "el-x-gesture"
-}
-
 /// Thin wrapper over ML Kit Digital Ink: model download state + recognition.
 /// Shared by the app and the keyboard. Everything is keyed by ML Kit model tag internally
-/// ("el", "en", "el-x-gesture"); text languages also have `InkLanguage` conveniences.
+/// ("el", "en"); text languages also have `InkLanguage` conveniences.
 @MainActor
 final class InkRecognitionService: ObservableObject {
 
-    /// All tags this service manages: the text languages, then the gesture classifier.
-    static let allTags = InkLanguage.allCases.map(\.rawValue) + [InkModelTag.greekGestures]
+    /// All tags this service manages. ML Kit's iOS SDK 8.0.0 has no gesture classifier
+    /// (`el-x-gesture` is unknown to it), so only the text languages.
+    static let allTags = InkLanguage.allCases.map(\.rawValue)
 
     @Published private(set) var states: [String: ModelState] = [:]
 
     var modelStates: [InkLanguage: ModelState] {
         Dictionary(uniqueKeysWithValues: InkLanguage.allCases.map { ($0, states[$0.rawValue] ?? .notDownloaded) })
     }
-    var gestureState: ModelState { states[InkModelTag.greekGestures] ?? .notDownloaded }
 
     private let modelManager = ModelManager.modelManager()
     /// Cached per tag, together with the maxResults it was built with.
@@ -153,12 +146,6 @@ final class InkRecognitionService: ObservableObject {
                    requireDownloaded: Bool = true) async throws -> [RecognitionCandidate] {
         try await run(strokes, tag: language.rawValue, preContext: preContext, writingArea: writingArea,
                       maxResults: maxResults, requireDownloaded: requireDownloaded)
-    }
-
-    /// Runs the gesture classifier on the strokes. Candidates are gesture names, best first.
-    func classifyGesture(_ strokes: [InkStroke], writingArea: CGSize? = nil, maxResults: Int = 3) async throws -> [RecognitionCandidate] {
-        try await run(strokes, tag: InkModelTag.greekGestures, preContext: nil, writingArea: writingArea,
-                      maxResults: maxResults, requireDownloaded: true)
     }
 
     private func run(_ strokes: [InkStroke], tag: String, preContext: String?, writingArea: CGSize?,

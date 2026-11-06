@@ -22,11 +22,8 @@ struct SetupView: View {
                 ForEach(InkLanguage.allCases) { language in
                     modelRow(language.label, tag: language.rawValue)
                 }
-                modelRow("Gestures (test)", tag: InkModelTag.greekGestures)
             } header: {
                 Text("Recognition models")
-            } footer: {
-                Text("Gestures: Phase 3 test. The keyboard logs what this model makes of your strokes (e.g. a scribble), nothing more yet.")
             }
 
             Section {
