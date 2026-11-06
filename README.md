@@ -125,6 +125,7 @@ GreekInkKeyboard/        Keyboard extension (UIKit): writing strip, candidate ba
 Shared/                  Compiled into both: ink canvas, ML Kit wrapper, model sharing,
                          App Group, memory numbers, diagnostics log
 scripts/install-ipad.sh  Build, install and launch on the iPad
+scripts/make-icon.swift  Draws the app icon (swift scripts/make-icon.swift <out.png>)
 Podfile, Podfile.lock    ML Kit via CocoaPods
 CLAUDE.md                Working notes: decisions, measurements, findings, phase status
 docs/                    Blog brief, App Store investigation
