@@ -32,7 +32,8 @@ Text as read from the [App Review Guidelines](https://developer.apple.com/app-st
 - provide a method for progressing to the next keyboard: **yes** (globe key);
 - remain functional without full network access and without requiring Full Access: **yes**,
   this is exactly what the App Group model copy solved;
-- collect user activity only to improve the keyboard on the device: **yes**, nothing leaves it.
+- collect user activity only to improve the keyboard on the device: **yes**, the keyboard has
+  no network, so nothing it sees leaves the iPad.
 
 They must not launch other apps besides Settings, or repurpose keys (e.g. hold return to open
 the camera). GreekInk does neither.
@@ -78,7 +79,7 @@ the camera). GreekInk does neither.
 
 **Business**
 - Price options: paid up front (e.g. €2.99–4.99), or free with a one-time unlock. The privacy
-  angle ("no ads, no tracking, nothing leaves your iPad") is the main differentiator against
+  angle ("no ads, no tracking, your handwriting never leaves your iPad") is the main differentiator against
   the competitor, so ads would undercut it.
 - Size of the market is the real question: Greek speakers who handwrite on an iPad. Small, but
   underserved. A TestFlight beta with Greek friends and a Greek teacher or two would show

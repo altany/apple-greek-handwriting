@@ -6,7 +6,9 @@ Apple's Scribble turns handwriting into text in any text field, but it has no Gr
 API to add a language. GreekInk is a custom keyboard extension instead: you write on a strip
 at the bottom of the screen, and the words are inserted where the cursor is. Recognition runs
 on the device with [Google ML Kit Digital Ink Recognition](https://developers.google.com/ml-kit/vision/digital-ink-recognition),
-which has Greek (`el`) and English (`en`) models. Nothing is sent anywhere.
+which has Greek (`el`) and English (`en`) models. Your handwriting and your text never leave
+the iPad. The keyboard has no network at all. The app goes online only to download the model,
+and ML Kit sends Google basic usage metrics from it ([ML Kit terms](https://developers.google.com/ml-kit/terms)).
 
 It is a personal project, not on the App Store. It is signed with a free Apple "Personal Team",
 so an install runs for 7 days and then needs a re-install from the Mac.
@@ -146,4 +148,5 @@ measured on the device, and what went wrong along the way.
 
 ## Licence
 
-MIT, see `LICENSE`. Google ML Kit is used under Google's own terms.
+GreekInk's own code is MIT, see `LICENSE`. Google ML Kit, which it downloads and links, comes
+under [Google's own terms](https://developers.google.com/ml-kit/terms).
