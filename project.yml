@@ -10,7 +10,9 @@ options:
   generateEmptyDirectories: true
   groupSortPosition: top
   # CocoaPods 1.15 can't read Xcode 16.3+ project format (objectVersion 77). Downgrade to 60 (Xcode 15), which Xcode 27 still opens fine.
-  postGenCommand: sed -i '' -e 's/objectVersion = 77;/objectVersion = 60;/' -e '/preferredProjectObjectVersion/d' GreekInk.xcodeproj/project.pbxproj
+  # Also drop the DevelopmentTeam lines XcodeGen copies from Local.xcconfig, so the Team ID never
+  # lands in git; signing still reads DEVELOPMENT_TEAM from Local.xcconfig.
+  postGenCommand: sed -i '' -e 's/objectVersion = 77;/objectVersion = 60;/' -e '/preferredProjectObjectVersion/d' -e '/DevelopmentTeam = /d' GreekInk.xcodeproj/project.pbxproj
 
 fileGroups:
   - Local.xcconfig
