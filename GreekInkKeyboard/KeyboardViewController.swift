@@ -421,7 +421,7 @@ final class KeyboardViewController: UIInputViewController {
         keyRow.spacing = 8
 
         symbolRow.spacing = 6
-        symbolRow.distribution = .fillEqually
+        symbolRow.distribution = .fill
         rebuildSymbolRow()
 
         let column = UIStackView(arrangedSubviews: [candidateRow, symbolRow, canvas, keyRow])
@@ -485,8 +485,11 @@ final class KeyboardViewController: UIInputViewController {
     private func rebuildSymbolRow() {
         symbolRow.arrangedSubviews.forEach { $0.removeFromSuperview() }
         let toggle = key(title: numberMode ? "αβγ" : "123")
+        toggle.configuration?.titleLineBreakMode = .byClipping   // one line, never "α/β/γ" stacked
         toggle.addTarget(self, action: #selector(numberModeTapped), for: .touchUpInside)
+        toggle.widthAnchor.constraint(equalToConstant: 72).isActive = true
         symbolRow.addArrangedSubview(toggle)
+        var first: UIButton?
         for symbol in numberMode ? Self.numberKeys : Self.punctuation {
             var config = UIButton.Configuration.plain()
             config.title = symbol
@@ -496,6 +499,8 @@ final class KeyboardViewController: UIInputViewController {
             let b = UIButton(configuration: config)
             b.addTarget(self, action: #selector(symbolTapped(_:)), for: .touchUpInside)
             symbolRow.addArrangedSubview(b)
+            // Symbol keys share the remaining width equally.
+            if let first { b.widthAnchor.constraint(equalTo: first.widthAnchor).isActive = true } else { first = b }
         }
     }
 

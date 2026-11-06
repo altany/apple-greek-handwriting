@@ -5,8 +5,9 @@ Apple's Scribble has no Greek and no API to add one, so this is a custom keyboar
 Personal use only. No App Store.
 
 ## Status (2026-11-06) — read this first
-- Phase 0, 1 and 2 are DONE. Phase 3 is IN PROGRESS (user said "go" on 2026-11-06). Built and
-  installed, waiting for the user's test round:
+- Phase 0, 1, 2 and 3 are DONE (Phase 3 closed 2026-11-06). NEXT: nothing started; ask the user.
+  Open options: extra `en` candidate chip (experiment), App Store path (see
+  docs/app-store-investigation.md), Phase 4 (optional, ask first). Phase 3 summary:
   - Pre-context: the keyboard passes the last 20 chars before the cursor + the auto space it is
     about to add (so ML Kit treats the ink as a new word), and trims/dedupes candidates. Per the
     docs ML Kit emits a leading space when it infers a word break from pre-context. Check the
@@ -39,7 +40,8 @@ Personal use only. No App Store.
     (`GreekInkKeyboard/NumberMode.swift`): candidates re-ranked by share of digits, look-alikes
     converted (Ο/ο/O→0, ι/l/I→1, Ζ→2, …), and digits written after a digit or after . , : / -
     join without the auto space ("15:" + "30" → "15:30"). Keyboard height 300 → 340 pt.
-    Built and installed, NOT yet tested by the user.
+    User tested: "works great and intuitively". The αβγ label wrapped one letter per line
+    (equal-width keys); the toggle now has a fixed 72 pt width and a one-line title.
   - Haptics: dropped. The iPad Air has no Taptic Engine.
 - Phase 2 results (first keyboard test, 2026-11-05 21:29, no Full Access):
   - Model sharing works: app copies ML Kit's folder into the App Group, keyboard copies it into
@@ -177,9 +179,9 @@ the official sample (github.com/googlesamples/mlkit, `ios/quickstarts/digitalink
   return, globe key (`advanceToNextInputMode`). Insert via `textDocumentProxy`.
   Commit top candidate after a pause or on tap. Auto spaces. iPad height,
   light/dark. Host app setup screen + model status. Measure memory on device.
-- Phase 3 — NEXT, ask first: pre-context (last ~20 chars of `documentContextBeforeInput`) + writing
-  area size to ML Kit. Scribble-to-delete gesture. Punctuation, numbers, haptics. Candidate:
-  extra `en` chip (measure first).
+- Phase 3 — DONE: pre-context (last ~20 chars of `documentContextBeforeInput`) + writing
+  area size to ML Kit. Scribble-to-delete (own detector), symbol row + 123 number mode.
+  Haptics dropped (no Taptic Engine on iPad). Not done, optional: extra `en` chip.
 - Phase 4 (optional, ask first): Claude API "clean up". Needs Full Access + API
   key in Keychain. Report cost and latency before building.
 
