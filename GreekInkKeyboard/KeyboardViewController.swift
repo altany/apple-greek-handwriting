@@ -13,7 +13,7 @@ final class KeyboardViewController: UIInputViewController {
     /// Pause after the last stroke before the ink is recognised and committed.
     /// Long enough to add a tonos or dialytika after the letters.
     static let commitDelay: Duration = .milliseconds(800)
-    static let keyboardHeight: CGFloat = 300
+    static let keyboardHeight: CGFloat = 340
     static let candidateCount = 5
 
     private let canvas = InkCanvasView()
@@ -36,6 +36,12 @@ final class KeyboardViewController: UIInputViewController {
     /// The word inserted last, so a tapped alternative can replace it.
     private struct Commit { var text: String; var alternatives: [String] }
     private var lastCommit: Commit?
+
+    /// The 123 key: digit keys in the row, and handwriting prefers digits.
+    private var numberMode = false
+    private let symbolRow = UIStackView()
+    static let punctuation = [".", ",", ";", "·", "!", "?", ":", "'", "\"", "(", ")", "-"]
+    static let numberKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", ".", ",", ":", "/", "-", "%"]
 
     // MARK: Lifecycle
 
@@ -134,7 +140,7 @@ final class KeyboardViewController: UIInputViewController {
     }
 
     private func readyStatus() -> String {
-        "\(language.rawValue) · \(MemoryFootprint.summary().replacingOccurrences(of: "memory: ", with: ""))"
+        "\(numberMode ? "123" : language.rawValue) · \(MemoryFootprint.summary().replacingOccurrences(of: "memory: ", with: ""))"
     }
 
     // MARK: Writing → text
@@ -179,7 +185,8 @@ final class KeyboardViewController: UIInputViewController {
             let raw = result.map { "\"\($0.text)\"" }.joined(separator: " / ")
             log.log("recognize \(trigger) \(language.rawValue): \(ms) ms, \(strokes.count) strokes, \(points) points, "
                     + "pre-context \"\(preContext)\", candidates: \(raw), \(MemoryFootprint.summary())")
-            let texts = Self.cleaned(result.map(\.text))
+            let cleaned = Self.cleaned(result.map(\.text))
+            let texts = numberMode ? Array(NumberMode.rank(cleaned).prefix(Self.candidateCount)) : cleaned
             guard let top = texts.first else { setStatus("nothing recognised"); return }
             insertWord(top)
             lastCommit = Commit(text: top, alternatives: texts)
@@ -212,7 +219,17 @@ final class KeyboardViewController: UIInputViewController {
     /// after an opening bracket/quote, or the word starts with closing punctuation.
     private func insertWord(_ word: String) {
         let before = textDocumentProxy.documentContextBeforeInput ?? ""
-        textDocumentProxy.insertText(Self.needsSpace(before: before, word: word) ? " " + word : word)
+        let continuesNumber = numberMode && Self.continuesNumber(before: before, word: word)
+        let space = !continuesNumber && Self.needsSpace(before: before, word: word)
+        textDocumentProxy.insertText(space ? " " + word : word)
+    }
+
+    /// Number mode: "20" then "26" makes "2026", "3." then "5" makes "3.5", "15:" then "30" makes "15:30".
+    static func continuesNumber(before: String, word: String) -> Bool {
+        guard let first = word.first, first.isNumber, let last = before.last else { return false }
+        if last.isNumber { return true }
+        let prev = before.dropLast().last
+        return ".,:/-".contains(last) && prev?.isNumber == true
     }
 
     static func needsSpace(before: String, word: String) -> Bool {
@@ -403,7 +420,11 @@ final class KeyboardViewController: UIInputViewController {
         let keyRow = UIStackView(arrangedSubviews: [globeKey, languageKey, space, delete, enter])
         keyRow.spacing = 8
 
-        let column = UIStackView(arrangedSubviews: [candidateRow, canvas, keyRow])
+        symbolRow.spacing = 6
+        symbolRow.distribution = .fillEqually
+        rebuildSymbolRow()
+
+        let column = UIStackView(arrangedSubviews: [candidateRow, symbolRow, canvas, keyRow])
         column.axis = .vertical
         column.spacing = 6
         column.translatesAutoresizingMaskIntoConstraints = false
@@ -415,6 +436,7 @@ final class KeyboardViewController: UIInputViewController {
             column.topAnchor.constraint(equalTo: view.topAnchor, constant: 6),
             column.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
             candidateRow.heightAnchor.constraint(equalToConstant: 40),
+            symbolRow.heightAnchor.constraint(equalToConstant: 38),
             keyRow.heightAnchor.constraint(equalToConstant: 48),
             globeKey.widthAnchor.constraint(equalToConstant: 64),
             languageKey.widthAnchor.constraint(equalToConstant: 80),
@@ -456,6 +478,62 @@ final class KeyboardViewController: UIInputViewController {
     private func clearCandidates() {
         lastCommit = nil
         candidateButtons.forEach { $0.isHidden = true }
+    }
+
+    // MARK: Symbol row
+
+    private func rebuildSymbolRow() {
+        symbolRow.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        let toggle = key(title: numberMode ? "αβγ" : "123")
+        toggle.addTarget(self, action: #selector(numberModeTapped), for: .touchUpInside)
+        symbolRow.addArrangedSubview(toggle)
+        for symbol in numberMode ? Self.numberKeys : Self.punctuation {
+            var config = UIButton.Configuration.plain()
+            config.title = symbol
+            config.baseForegroundColor = .label
+            config.background.backgroundColor = .tertiarySystemFill
+            config.cornerStyle = .medium
+            let b = UIButton(configuration: config)
+            b.addTarget(self, action: #selector(symbolTapped(_:)), for: .touchUpInside)
+            symbolRow.addArrangedSubview(b)
+        }
+    }
+
+    @objc private func numberModeTapped() {
+        numberMode.toggle()
+        rebuildSymbolRow()
+        log.log("number mode \(numberMode ? "on" : "off")")
+        setStatus(readyStatus())
+    }
+
+    /// Inserts ink waiting on the strip first, then the symbol with sensible spacing.
+    @objc private func symbolTapped(_ sender: UIButton) {
+        guard let symbol = sender.configuration?.title else { return }
+        Task {
+            await recognizeAndCommit(trigger: "symbol")
+            let before = textDocumentProxy.documentContextBeforeInput ?? ""
+            textDocumentProxy.insertText(Self.spaced(symbol, before: before))
+            clearCandidates()
+        }
+    }
+
+    /// Closing marks attach to the word before; "(" gets a space before it after a word;
+    /// a quote closes after a word and opens otherwise; digits follow digits directly.
+    static func spaced(_ symbol: String, before: String) -> String {
+        guard let last = before.last else { return symbol }
+        let afterWord = !last.isWhitespace && last != "(" && last != "\n"
+        switch symbol {
+        case "(":
+            return afterWord ? " (" : "("
+        case "'", "\"":
+            return symbol
+        default:
+            if symbol.first?.isNumber == true {
+                // A digit after a letter-word starts a new word; after a digit or symbol it continues.
+                return last.isLetter ? " " + symbol : symbol
+            }
+            return symbol
+        }
     }
 
     private func setStatus(_ text: String) {

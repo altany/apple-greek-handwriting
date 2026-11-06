@@ -33,7 +33,13 @@ Personal use only. No App Store.
     tall (50×57), or have ≤4. No scribble was seen in the log, so it is still untested.
     Memory 9–15 MB over many keyboard reloads. The user writes on new lines, so pre-context is
     often just "\n".
-  - Punctuation and numbers: no code yet; the user tests handwriting them first.
+  - Punctuation and numbers (user chose "both"): a symbol row above the strip (. , ; · ! ? : ' " ( ) -)
+    and a 123 key that swaps it to digits 0–9 . , : / - %. Tapping a symbol first commits ink on
+    the strip; closing marks attach, "(" gets a space after a word. 123 also turns on number mode
+    (`GreekInkKeyboard/NumberMode.swift`): candidates re-ranked by share of digits, look-alikes
+    converted (Ο/ο/O→0, ι/l/I→1, Ζ→2, …), and digits written after a digit or after . , : / -
+    join without the auto space ("15:" + "30" → "15:30"). Keyboard height 300 → 340 pt.
+    Built and installed, NOT yet tested by the user.
   - Haptics: dropped. The iPad Air has no Taptic Engine.
 - Phase 2 results (first keyboard test, 2026-11-05 21:29, no Full Access):
   - Model sharing works: app copies ML Kit's folder into the App Group, keyboard copies it into
