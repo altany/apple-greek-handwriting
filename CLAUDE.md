@@ -19,6 +19,9 @@ Personal use only. No App Store.
     (≥5 turns) missed the user's zigzags: they have 4 turns, 104–175 × 35–58 pt. With ink on the
     strip a zigzag erases it. On an empty strip it deletes the last word on the current line,
     never a line break or attachment (U+FFFC); the first version deleted a "\n". Verdicts logged.
+    Retest 13:55: erasing ink WORKS (2/2, zigzags 136–144 × 24–29 pt, 4–5 long legs). Deleting the
+    word failed because a 3×3 pt Pencil dot landed first and counted as ink; specks < 8 pt are
+    now ignored. Word delete is still to be retested.
   - Apple's own Scribble scratch-out works on the inserted text in Notes (user found it), even
     though Scribble has no Greek handwriting. That is the easy way to delete a word mid-text.
   - Test round 2026-11-06 13:33–13:38 (keyboard, Pencil): 5 candidates now show. All of these came

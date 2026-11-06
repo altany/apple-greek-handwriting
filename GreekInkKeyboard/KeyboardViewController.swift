@@ -282,13 +282,22 @@ final class KeyboardViewController: UIInputViewController {
         log.log("stroke: \(last.points.count) points, \(verdict.summary)")
         guard verdict.isScribble else { scheduleCommit(); return }
         pauseTask?.cancel()
-        if canvas.strokes.count > 1 {
-            log.log("scribble: erased \(canvas.strokes.count - 1) strokes of ink")
-            canvas.clear()
-        } else {
-            canvas.clear()
+        // A dot or speck (e.g. the Pencil touching down just before the zigzag) is not ink to
+        // erase: if that is all there is, the strip counts as empty.
+        let ink = canvas.strokes.dropLast().filter { !Self.isSpeck($0) }
+        canvas.clear()
+        if ink.isEmpty {
             deleteLastWord()
+        } else {
+            log.log("scribble: erased \(ink.count) strokes of ink")
         }
+    }
+
+    /// Smaller than 8 pt both ways: a dot or a stray touch, not writing worth keeping.
+    static func isSpeck(_ stroke: InkStroke) -> Bool {
+        let xs = stroke.points.map(\.x), ys = stroke.points.map(\.y)
+        guard let minX = xs.min(), let maxX = xs.max(), let minY = ys.min(), let maxY = ys.max() else { return true }
+        return maxX - minX < 8 && maxY - minY < 8
     }
 
     /// Deletes the word before the cursor and the space before it, on the current line only:
