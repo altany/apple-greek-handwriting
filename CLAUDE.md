@@ -18,6 +18,14 @@ Personal use only. No App Store.
     ≥5 horizontal reversals, ≥50 pt wide, height ≤ 0.9 × width). With other ink on the strip it
     erases the ink; on an empty strip it deletes the last word (+ the space before it). Every
     stroke's verdict is logged ("stroke: … reversals …") to tune thresholds. Not yet tested.
+  - Test round 2026-11-06 13:33–13:38 (keyboard, Pencil): 5 candidates now show. All of these came
+    out right: "Νερό στη βάρκα μας" (the ν→μ misread is gone), "Παράπονο", "μέμφομαι", "ωραίο"
+    (written after "μέμφομαι ", no leading space returned), en "Nature", "Hurt". Near misses:
+    "Natur boy" (top) for "Nature boy", "μιας" top over "μας" once, "1η" vs "ξη" in a date.
+    Scribble detector: no false positives. Ordinary letters reach at most 6 reversals but are
+    tall (50×57), or have ≤4. No scribble was seen in the log, so it is still untested.
+    Memory 9–15 MB over many keyboard reloads. The user writes on new lines, so pre-context is
+    often just "\n".
   - Punctuation and numbers: no code yet; the user tests handwriting them first.
   - Haptics: dropped. The iPad Air has no Taptic Engine.
 - Phase 2 results (first keyboard test, 2026-11-05 21:29, no Full Access):
