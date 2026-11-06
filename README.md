@@ -16,8 +16,14 @@ so an install runs for 7 days and then needs a re-install from the Mac.
 - **Write, pause, done.** After an 800 ms pause the ink is recognised, the best candidate is
   inserted with an automatic space, and the alternatives appear in a bar above the strip.
   Tap one to swap it in. Accents (τόνος), dialytika and capitals come out right.
-- **ΕΛ / EN key** switches between the Greek and the English model. The Greek model only
-  writes Greek letters, so Latin words need the switch.
+- **Greek and English.** While you write Greek, the English model reads the same ink and its
+  best guess appears as an extra chip marked EN (and the other way round). Tap it for a Latin
+  word inside Greek text. The ΕΛ / EN key switches the main model.
+- **Scratch out.** A quick zigzag on the strip erases the ink there; on an empty strip it
+  deletes the last word. (ML Kit's iOS SDK has no gesture model, so this is a small geometric
+  check in `GreekInkKeyboard/ScribbleDetector.swift`.)
+- **Punctuation and numbers.** A row of keys above the strip: . , ; · ! ? : ' " ( ) -.
+  The 123 key swaps it to digits and makes handwriting prefer digits too.
 - **Context.** The last 20 characters before the cursor are passed to ML Kit, which helps it
   pick the right word.
 - **No Full Access needed.** A keyboard without Full Access has no network, so it cannot
@@ -67,11 +73,26 @@ team, and copy the ID Xcode writes into the project.
 
 ## Build and install on the iPad
 
-Plug in the iPad, unlock it, tap **Trust** when asked. Then:
+The script `scripts/install-ipad.sh` does everything: builds the app and the keyboard with
+your Personal Team, installs them on the iPad and opens the app.
 
-```sh
-scripts/install-ipad.sh        # build + install + launch; auto-detects the iPad
-```
+1. Connect the iPad to the Mac with a USB cable (after the first time, the same Wi‑Fi also
+   works if the iPad shows up in `xcrun devicectl list devices`).
+2. Unlock the iPad. The first time, tap **Trust** on the iPad when it asks about this Mac.
+3. In the project folder on the Mac, run:
+
+   ```sh
+   scripts/install-ipad.sh
+   ```
+
+   It finds the iPad by itself. With several devices connected, pass the one you want:
+   `scripts/install-ipad.sh <device-id>` (ids from `xcrun devicectl list devices`).
+4. It prints `** BUILD SUCCEEDED **`, then "App installed", then "Launched application".
+   The first build takes a few minutes (ML Kit is large); later ones are faster.
+
+If it ends with **"Locked"**, the install worked but the iPad was locked, so it couldn't
+open the app: unlock it and open GreekInk yourself. If the app icon is greyed out or the
+iPad says "Untrusted Developer", see the one-time setup below.
 
 Or open `GreekInk.xcworkspace` in Xcode, pick the iPad as the run destination and press Run.
 
@@ -90,7 +111,8 @@ Or open `GreekInk.xcworkspace` in Xcode, pick the iPad as the run destination an
 ## Every 7 days
 
 A free Personal Team signs apps that stop launching after 7 days ("GreekInk is no longer
-available"). Nothing is lost: plug in the iPad and run `scripts/install-ipad.sh` again.
+available"). Nothing is lost, not even the keyboard settings or the downloaded model: plug in
+the iPad, unlock it and run `scripts/install-ipad.sh` again (steps above).
 Other free-team limits: at most 3 such apps on a device, about 10 new App IDs per week.
 
 ## Project layout
