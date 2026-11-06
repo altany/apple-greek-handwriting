@@ -14,6 +14,7 @@ APP="$DD/Build/Products/Debug-iphoneos/GreekInk.app"
 
 [ -f Local.xcconfig ] || { echo "Local.xcconfig missing: cp Local.xcconfig.example Local.xcconfig and fill in DEVELOPMENT_TEAM"; exit 1; }
 grep -q 'DEVELOPMENT_TEAM = X' Local.xcconfig && { echo "Local.xcconfig still has the placeholder DEVELOPMENT_TEAM"; exit 1; }
+grep -q 'com.example.yourname' Local.xcconfig && { echo "Local.xcconfig still has the placeholder BUNDLE_ID_PREFIX"; exit 1; }
 
 DEVICE="${1:-}"
 if [ -z "$DEVICE" ]; then
