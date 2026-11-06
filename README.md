@@ -18,9 +18,8 @@ so an install runs for 7 days and then needs a re-install from the Mac.
 - **Write, pause, done.** After an 800 ms pause the ink is recognised, the best candidate is
   inserted with an automatic space, and the alternatives appear in a bar above the strip.
   Tap one to swap it in. Accents (τόνος), dialytika and capitals come out right.
-- **Greek and English.** While you write Greek, the English model reads the same ink and its
-  best guess appears as an extra chip marked EN (and the other way round). Tap it for a Latin
-  word inside Greek text. The ΕΛ / EN key switches the main model.
+- **ΕΛ / EN key** switches between the Greek and the English model. The Greek model reads many
+  Latin words by itself (e.g. "Apple"); for the rest, switch.
 - **Scratch out.** A quick zigzag on the strip erases the ink there; on an empty strip it
   deletes the last word. (ML Kit's iOS SDK has no gesture model, so this is a small geometric
   check in `GreekInkKeyboard/ScribbleDetector.swift`.)
