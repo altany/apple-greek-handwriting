@@ -7,15 +7,15 @@ final class KeyboardModelExporter: ObservableObject {
     @Published private(set) var manifest: ModelSharing.Manifest? = ModelSharing.sharedManifest()
     @Published private(set) var message = ""
 
-    /// Copies again when the shared copy is missing or lists other languages than are downloaded now.
+    /// Copies again when the shared copy is missing or lists other models than are downloaded now.
     func exportIfNeeded(service: InkRecognitionService) {
-        let languages = Self.downloaded(service)
+        let languages = service.downloadedTags()
         guard !languages.isEmpty, manifest?.languages != languages else { return }
         export(service: service, trigger: "auto")
     }
 
     func export(service: InkRecognitionService, trigger: String = "manual") {
-        let languages = Self.downloaded(service)
+        let languages = service.downloadedTags()
         do {
             let m = try ModelSharing.exportToAppGroup(languages: languages)
             manifest = m
@@ -32,9 +32,5 @@ final class KeyboardModelExporter: ObservableObject {
         let when = m.exportedAt.formatted(date: .abbreviated, time: .shortened)
         let mb = String(format: "%.1f MB", Double(m.bytes) / 1_048_576)
         return "\(m.languages.joined(separator: " + ")) · \(mb) · \(when)"
-    }
-
-    private static func downloaded(_ service: InkRecognitionService) -> [String] {
-        InkLanguage.allCases.filter { service.isDownloaded($0) }.map(\.rawValue).sorted()
     }
 }

@@ -24,26 +24,42 @@ enum ModelState: Equatable {
 
 enum RecognitionError: LocalizedError {
     case unknownLanguage(String)
-    case modelNotDownloaded(InkLanguage)
+    case modelNotDownloaded(String)
 
     var errorDescription: String? {
         switch self {
         case .unknownLanguage(let tag): return "ML Kit has no model for language tag \(tag)"
-        case .modelNotDownloaded(let l): return "Model for \(l.label) is not downloaded"
+        case .modelNotDownloaded(let tag): return "Model \(tag) is not downloaded"
         }
     }
 }
 
+/// ML Kit model tags that are not text languages.
+enum InkModelTag {
+    /// Gesture classifier for Greek (tag from the ML Kit base-models table). What it returns
+    /// (scribble, strike-through…) is not documented: Phase 3 logs its output to find out.
+    static let greekGestures = "el-x-gesture"
+}
+
 /// Thin wrapper over ML Kit Digital Ink: model download state + recognition.
-/// Shared by the app and (from Phase 2) the keyboard.
+/// Shared by the app and the keyboard. Everything is keyed by ML Kit model tag internally
+/// ("el", "en", "el-x-gesture"); text languages also have `InkLanguage` conveniences.
 @MainActor
 final class InkRecognitionService: ObservableObject {
 
-    @Published private(set) var modelStates: [InkLanguage: ModelState] = [:]
+    /// All tags this service manages: the text languages, then the gesture classifier.
+    static let allTags = InkLanguage.allCases.map(\.rawValue) + [InkModelTag.greekGestures]
+
+    @Published private(set) var states: [String: ModelState] = [:]
+
+    var modelStates: [InkLanguage: ModelState] {
+        Dictionary(uniqueKeysWithValues: InkLanguage.allCases.map { ($0, states[$0.rawValue] ?? .notDownloaded) })
+    }
+    var gestureState: ModelState { states[InkModelTag.greekGestures] ?? .notDownloaded }
 
     private let modelManager = ModelManager.modelManager()
-    /// Cached per language, together with the maxResults it was built with.
-    private var recognizers: [InkLanguage: (recognizer: DigitalInkRecognizer, maxResults: Int)] = [:]
+    /// Cached per tag, together with the maxResults it was built with.
+    private var recognizers: [String: (recognizer: DigitalInkRecognizer, maxResults: Int)] = [:]
     private var observers: [NSObjectProtocol] = []
 
     init() {
@@ -65,42 +81,51 @@ final class InkRecognitionService: ObservableObject {
 
     // MARK: Models
 
-    func model(for language: InkLanguage) throws -> DigitalInkRecognitionModel {
-        guard let identifier = DigitalInkRecognitionModelIdentifier(forLanguageTag: language.rawValue) else {
-            throw RecognitionError.unknownLanguage(language.rawValue)
+    func model(forTag tag: String) throws -> DigitalInkRecognitionModel {
+        guard let identifier = DigitalInkRecognitionModelIdentifier(forLanguageTag: tag) else {
+            throw RecognitionError.unknownLanguage(tag)
         }
         return DigitalInkRecognitionModel(modelIdentifier: identifier)
     }
 
-    func isDownloaded(_ language: InkLanguage) -> Bool {
-        guard let model = try? model(for: language) else { return false }
+    func isDownloaded(tag: String) -> Bool {
+        guard let model = try? model(forTag: tag) else { return false }
         return modelManager.isModelDownloaded(model)
     }
 
+    func isDownloaded(_ language: InkLanguage) -> Bool { isDownloaded(tag: language.rawValue) }
+
+    /// Tags whose models are on disk, sorted (what the keyboard copy should contain).
+    func downloadedTags() -> [String] { Self.allTags.filter { isDownloaded(tag: $0) }.sorted() }
+
     func refreshModelStates() {
-        for language in InkLanguage.allCases {
-            if modelStates[language] == .downloading, !isDownloaded(language) { continue }
-            modelStates[language] = isDownloaded(language) ? .downloaded : .notDownloaded
+        for tag in Self.allTags {
+            if states[tag] == .downloading, !isDownloaded(tag: tag) { continue }
+            states[tag] = isDownloaded(tag: tag) ? .downloaded : .notDownloaded
         }
     }
 
-    func download(_ language: InkLanguage) {
-        guard let model = try? model(for: language) else {
-            modelStates[language] = .failed("unknown language tag")
+    func download(_ language: InkLanguage) { download(tag: language.rawValue) }
+
+    func download(tag: String) {
+        guard let model = try? model(forTag: tag) else {
+            states[tag] = .failed("unknown model tag")
             return
         }
         if modelManager.isModelDownloaded(model) {
-            modelStates[language] = .downloaded
+            states[tag] = .downloaded
             return
         }
-        modelStates[language] = .downloading
+        states[tag] = .downloading
         let conditions = ModelDownloadConditions(allowsCellularAccess: true, allowsBackgroundDownloading: true)
         _ = modelManager.download(model, conditions: conditions)
     }
 
-    func delete(_ language: InkLanguage) {
-        guard let model = try? model(for: language) else { return }
-        recognizers[language] = nil
+    func delete(_ language: InkLanguage) { delete(tag: language.rawValue) }
+
+    func delete(tag: String) {
+        guard let model = try? model(forTag: tag) else { return }
+        recognizers[tag] = nil
         modelManager.deleteDownloadedModel(model) { [weak self] _ in
             Task { @MainActor in self?.refreshModelStates() }
         }
@@ -108,25 +133,37 @@ final class InkRecognitionService: ObservableObject {
 
     private func downloadFailed(model: DigitalInkRecognitionModel?, error: Error?) {
         let why = error?.localizedDescription ?? "unknown error"
-        for language in InkLanguage.allCases where modelStates[language] == .downloading {
-            if let model, let ours = try? self.model(for: language), ours != model { continue }
-            modelStates[language] = .failed(why)
+        for tag in Self.allTags where states[tag] == .downloading {
+            if let model, let ours = try? self.model(forTag: tag), ours != model { continue }
+            states[tag] = .failed(why)
         }
     }
 
     // MARK: Recognition
 
     /// Recognises the strokes. `writingArea` is the canvas size in the same units as the points.
-    /// `preContext` is text before the cursor (Phase 3). Returns up to `maxResults` candidates, best first.
-    /// `requireDownloaded: false` skips the `isModelDownloaded` check (diagnostics: does ML Kit load
-    /// the files anyway?).
+    /// `preContext` is the text before the ink (ML Kit uses the last 20 characters). Returns up to
+    /// `maxResults` candidates, best first. `requireDownloaded: false` skips the
+    /// `isModelDownloaded` check (diagnostics: does ML Kit load the files anyway?).
     func recognize(_ strokes: [InkStroke],
                    language: InkLanguage,
                    preContext: String? = nil,
                    writingArea: CGSize? = nil,
                    maxResults: Int = 5,
                    requireDownloaded: Bool = true) async throws -> [RecognitionCandidate] {
-        let recognizer = try recognizer(for: language, maxResults: maxResults, requireDownloaded: requireDownloaded)
+        try await run(strokes, tag: language.rawValue, preContext: preContext, writingArea: writingArea,
+                      maxResults: maxResults, requireDownloaded: requireDownloaded)
+    }
+
+    /// Runs the gesture classifier on the strokes. Candidates are gesture names, best first.
+    func classifyGesture(_ strokes: [InkStroke], writingArea: CGSize? = nil, maxResults: Int = 3) async throws -> [RecognitionCandidate] {
+        try await run(strokes, tag: InkModelTag.greekGestures, preContext: nil, writingArea: writingArea,
+                      maxResults: maxResults, requireDownloaded: true)
+    }
+
+    private func run(_ strokes: [InkStroke], tag: String, preContext: String?, writingArea: CGSize?,
+                     maxResults: Int, requireDownloaded: Bool) async throws -> [RecognitionCandidate] {
+        let recognizer = try recognizer(forTag: tag, maxResults: maxResults, requireDownloaded: requireDownloaded)
         let ink = Ink(strokes: strokes.map { stroke in
             Stroke(points: stroke.points.map { p in
                 StrokePoint(x: Float(p.x), y: Float(p.y), t: Int(p.t * 1000))
@@ -156,15 +193,17 @@ final class InkRecognitionService: ObservableObject {
         recognizers.removeAll()
     }
 
-    private func recognizer(for language: InkLanguage, maxResults: Int, requireDownloaded: Bool) throws -> DigitalInkRecognizer {
+    private func recognizer(forTag tag: String, maxResults: Int, requireDownloaded: Bool) throws -> DigitalInkRecognizer {
         // maxResults is fixed when the recognizer is built: rebuild if a caller asks for another count.
-        if let cached = recognizers[language], cached.maxResults == maxResults { return cached.recognizer }
-        let model = try model(for: language)
-        guard !requireDownloaded || modelManager.isModelDownloaded(model) else { throw RecognitionError.modelNotDownloaded(language) }
+        if let cached = recognizers[tag], cached.maxResults == maxResults { return cached.recognizer }
+        let model = try model(forTag: tag)
+        guard !requireDownloaded || modelManager.isModelDownloaded(model) else {
+            throw RecognitionError.modelNotDownloaded(tag)
+        }
         let options = DigitalInkRecognizerOptions(model: model)
         options.maxResultCount = Int32(maxResults)
         let recognizer = DigitalInkRecognizer.digitalInkRecognizer(options: options)
-        recognizers[language] = (recognizer, maxResults)
+        recognizers[tag] = (recognizer, maxResults)
         return recognizer
     }
 }

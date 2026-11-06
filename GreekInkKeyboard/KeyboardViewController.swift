@@ -164,25 +164,63 @@ final class KeyboardViewController: UIInputViewController {
         let strokes = canvas.strokes
         guard !strokes.isEmpty else { return }
         guard let service else { setStatus("loading model…"); return }
+        let preContext = Self.preContext(before: textDocumentProxy.documentContextBeforeInput ?? "")
+        let area = canvas.bounds.size
         let started = Date()
         do {
-            let result = try await service.recognize(strokes, language: language,
-                                                     writingArea: canvas.bounds.size, maxResults: Self.candidateCount,
+            let result = try await service.recognize(strokes, language: language, preContext: preContext,
+                                                     writingArea: area, maxResults: Self.candidateCount,
                                                      requireDownloaded: !skipDownloadCheck)
             let ms = Int(Date().timeIntervalSince(started) * 1000)
             // Strokes written while recognition ran stay on the strip for the next word.
             if canvas.strokes.count >= strokes.count { canvas.removeFirstStrokes(strokes.count) } else { canvas.clear() }
             let points = strokes.reduce(0) { $0 + $1.points.count }
+            // Quoted, so leading spaces from ML Kit's word-break logic show up in the log.
+            let raw = result.map { "\"\($0.text)\"" }.joined(separator: " / ")
             log.log("recognize \(trigger) \(language.rawValue): \(ms) ms, \(strokes.count) strokes, \(points) points, "
-                    + "candidates: \(result.map(\.text).joined(separator: " / ")), \(MemoryFootprint.summary())")
-            guard let top = result.first?.text, !top.isEmpty else { setStatus("nothing recognised"); return }
+                    + "pre-context \"\(preContext)\", candidates: \(raw), \(MemoryFootprint.summary())")
+            let texts = Self.cleaned(result.map(\.text))
+            guard let top = texts.first else { setStatus("nothing recognised"); return }
             insertWord(top)
-            lastCommit = Commit(text: top, alternatives: result.map(\.text))
-            showCandidates(result.map(\.text), selected: top)
+            lastCommit = Commit(text: top, alternatives: texts)
+            showCandidates(texts, selected: top)
             setStatus(readyStatus())
         } catch {
             log.log("recognize \(trigger) FAILED: \(error)")
             setStatus("error: \(error.localizedDescription)")
+        }
+        await probeGesture(strokes, area: area)
+    }
+
+    /// The text ML Kit sees before the ink: the last 20 characters (ML Kit's limit) of what is
+    /// before the cursor, plus the space `insertWord` is about to add. With the space, ML Kit
+    /// treats the ink as a new word; it still gets the sentence so far as context.
+    static func preContext(before: String) -> String {
+        let text = needsSpace(before: before, word: "a") ? before + " " : before
+        return String(text.suffix(20))
+    }
+
+    /// Candidates without surrounding spaces (ML Kit may add a leading one after pre-context),
+    /// empty and duplicate entries removed, order kept.
+    static func cleaned(_ texts: [String]) -> [String] {
+        var seen = Set<String>()
+        return texts
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty && seen.insert($0).inserted }
+    }
+
+    /// Phase 3 test: runs the gesture classifier on the same strokes and only logs what it says,
+    /// to learn its labels (scribble, strike-through…) before building delete-by-scribble.
+    private func probeGesture(_ strokes: [InkStroke], area: CGSize) async {
+        guard let service, service.isDownloaded(tag: InkModelTag.greekGestures) else { return }
+        let started = Date()
+        do {
+            let result = try await service.classifyGesture(strokes, writingArea: area)
+            let ms = Int(Date().timeIntervalSince(started) * 1000)
+            let labels = result.map { c in c.score.map { String(format: "%@ (%.3f)", c.text, $0) } ?? c.text }
+            log.log("gesture probe: \(ms) ms, \(strokes.count) strokes: \(labels.joined(separator: " / ")), \(MemoryFootprint.summary())")
+        } catch {
+            log.log("gesture probe FAILED: \(error)")
         }
     }
 

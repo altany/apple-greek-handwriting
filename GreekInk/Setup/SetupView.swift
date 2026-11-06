@@ -18,26 +18,21 @@ struct SetupView: View {
                 Text("“Allow Full Access” is not needed: the keyboard uses the model this app downloads.")
             }
 
-            Section("Recognition models") {
+            Section {
                 ForEach(InkLanguage.allCases) { language in
-                    HStack {
-                        Text(language.label)
-                        Spacer()
-                        Text((service.modelStates[language] ?? .notDownloaded).label)
-                            .foregroundStyle(.secondary)
-                        if service.modelStates[language] == .downloaded {
-                            Button("Delete", role: .destructive) { service.delete(language) }
-                        } else if service.modelStates[language] != .downloading {
-                            Button("Download") { service.download(language) }
-                        }
-                    }
+                    modelRow(language.label, tag: language.rawValue)
                 }
+                modelRow("Gestures (test)", tag: InkModelTag.greekGestures)
+            } header: {
+                Text("Recognition models")
+            } footer: {
+                Text("Gestures: Phase 3 test. The keyboard logs what this model makes of your strokes (e.g. a scribble), nothing more yet.")
             }
 
             Section {
                 LabeledContent("Shared copy", value: exporter.summary)
                 Button("Copy model for keyboard") { exporter.export(service: service) }
-                    .disabled(!InkLanguage.allCases.contains { service.modelStates[$0] == .downloaded })
+                    .disabled(service.downloadedTags().isEmpty)
                 if !exporter.message.isEmpty {
                     Text(exporter.message).font(.caption).foregroundStyle(.secondary)
                 }
@@ -56,6 +51,20 @@ struct SetupView: View {
 
             Section("Memory (app)") {
                 Text(MemoryFootprint.summary()).font(.caption.monospaced())
+            }
+        }
+    }
+
+    private func modelRow(_ label: String, tag: String) -> some View {
+        let state = service.states[tag] ?? .notDownloaded
+        return HStack {
+            Text(label)
+            Spacer()
+            Text(state.label).foregroundStyle(.secondary)
+            if state == .downloaded {
+                Button("Delete", role: .destructive) { service.delete(tag: tag) }
+            } else if state != .downloading {
+                Button("Download") { service.download(tag: tag) }
             }
         }
     }

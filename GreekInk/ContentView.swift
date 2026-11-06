@@ -31,6 +31,6 @@ struct ContentView: View {
         }
         // The keyboard has no network without Full Access: keep a copy of the model for it.
         .task { exporter.exportIfNeeded(service: service) }
-        .onChange(of: service.modelStates) { exporter.exportIfNeeded(service: service) }
+        .onChange(of: service.states) { exporter.exportIfNeeded(service: service) }
     }
 }
