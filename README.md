@@ -122,3 +122,7 @@ docs/                    Blog brief, App Store investigation
 Built with [Claude Code](https://claude.com/claude-code) in phases (setup, prototype app,
 keyboard, polish). `CLAUDE.md` holds the running notes: what was decided and why, what was
 measured on the device, and what went wrong along the way.
+
+## Licence
+
+MIT, see `LICENSE`. Google ML Kit is used under Google's own terms.
