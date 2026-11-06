@@ -34,7 +34,13 @@ final class KeyboardViewController: UIInputViewController {
     private let log = DiagnosticsLog.shared
 
     /// The word inserted last, so a tapped alternative can replace it.
-    private struct Commit { var text: String; var alternatives: [String] }
+    private struct Commit {
+        var text: String
+        var alternatives: [String]
+        /// Top candidate of the other language (the EN/ΕΛ chip), added a moment later.
+        var extra: String? = nil
+        var extraLanguage: InkLanguage? = nil
+    }
     private var lastCommit: Commit?
 
     /// The 123 key: digit keys in the row, and handwriting prefers digits.
@@ -192,9 +198,38 @@ final class KeyboardViewController: UIInputViewController {
             lastCommit = Commit(text: top, alternatives: texts)
             showCandidates(texts, selected: top)
             setStatus(readyStatus())
+            // After the insert, so it never delays the word.
+            await addOtherLanguageChip(strokes, preContext: preContext, area: area, inserted: top)
         } catch {
             log.log("recognize \(trigger) FAILED: \(error)")
             setStatus("error: \(error.localizedDescription)")
+        }
+    }
+
+    /// Runs the other language's model (en while writing Greek, el while writing English) on the
+    /// same strokes and shows its top candidate as an extra chip, so a Latin word inside Greek
+    /// text needs no ΕΛ/EN switch. Skipped in number mode or when that model isn't shared.
+    private func addOtherLanguageChip(_ strokes: [InkStroke], preContext: String, area: CGSize, inserted: String) async {
+        guard !numberMode, let service else { return }
+        let other: InkLanguage = language == .greek ? .english : .greek
+        guard skipDownloadCheck || service.isDownloaded(other) else { return }
+        let started = Date()
+        do {
+            let result = try await service.recognize(strokes, language: other, preContext: preContext,
+                                                     writingArea: area, maxResults: 1,
+                                                     requireDownloaded: !skipDownloadCheck)
+            let ms = Int(Date().timeIntervalSince(started) * 1000)
+            let text = Self.cleaned(result.map(\.text)).first
+            log.log("other-language chip \(other.rawValue): \(ms) ms, \"\(text ?? "-")\", \(MemoryFootprint.summary())")
+            // Only if the inserted word is still the one on screen and the chip adds something new.
+            guard let text, var commit = lastCommit, commit.text == inserted,
+                  !commit.alternatives.contains(text) else { return }
+            commit.extra = text
+            commit.extraLanguage = other
+            lastCommit = commit
+            showCandidates(commit.alternatives, selected: commit.text, extra: text, extraLanguage: other)
+        } catch {
+            log.log("other-language chip \(other.rawValue) FAILED: \(error)")
         }
     }
 
@@ -253,7 +288,7 @@ final class KeyboardViewController: UIInputViewController {
         log.log("replaced “\(commit.text)” with “\(alternative)”")
         commit.text = alternative
         lastCommit = commit
-        showCandidates(commit.alternatives, selected: alternative)
+        showCandidates(commit.alternatives, selected: alternative, extra: commit.extra, extraLanguage: commit.extraLanguage)
     }
 
     // MARK: Keys
@@ -376,7 +411,7 @@ final class KeyboardViewController: UIInputViewController {
         candidateStack.axis = .horizontal
         candidateStack.spacing = 6
         candidateStack.distribution = .fillEqually
-        for _ in 0..<Self.candidateCount {
+        for _ in 0..<(Self.candidateCount + 1) {   // + 1: the other-language chip
             var config = UIButton.Configuration.plain()
             config.titleLineBreakMode = .byTruncatingTail
             let b = UIButton(configuration: config)
@@ -463,8 +498,22 @@ final class KeyboardViewController: UIInputViewController {
         languageKey.configuration?.title = language == .greek ? "ΕΛ" : "EN"
     }
 
-    private func showCandidates(_ texts: [String], selected: String) {
+    private func showCandidates(_ texts: [String], selected: String,
+                                extra: String? = nil, extraLanguage: InkLanguage? = nil) {
         for (i, b) in candidateButtons.enumerated() {
+            if i == Self.candidateCount {
+                // Last slot: the other-language chip, labelled EN or ΕΛ.
+                guard let extra else { b.isHidden = true; continue }
+                var config: UIButton.Configuration = extra == selected ? .tinted() : .bordered()
+                config.title = extra
+                config.subtitle = extraLanguage == .greek ? "ΕΛ" : "EN"
+                config.titleAlignment = .center
+                config.titleLineBreakMode = .byTruncatingTail
+                config.cornerStyle = .medium
+                b.configuration = config
+                b.isHidden = false
+                continue
+            }
             guard i < texts.count else { b.isHidden = true; continue }
             var config: UIButton.Configuration = texts[i] == selected ? .tinted() : .plain()
             config.title = texts[i]
