@@ -15,11 +15,9 @@ Personal use only. No App Store.
   - Timing in the keyboard: warm-up 53 ms, 12 strokes / 1193 points recognised in 93 ms.
   - Bug found and fixed: only 1 candidate showed (warm-up cached a maxResults-1 recognizer).
     Reinstalled; the 5-candidate bar is not yet re-tested by the user.
-- Fixing a misread word in the middle or at the start: today only by placing the cursor,
-  backspace, rewrite (the candidate bar swaps only the LAST inserted word). Offered and parked
-  for Phase 3, user said "stop here" for now: (a) remember candidates of recent words and show
-  them again when the cursor is in/after one, (b) drag on the space bar to move the cursor,
-  (c) write over a selected word with safe spacing.
+- Fixing a misread word in the middle or at the start: the user found a way to do it with the
+  current keyboard (2026-11-06) and wants no work on it now. Ideas kept only in case it comes
+  back: candidates for any recent word, space-bar cursor, write over a selection.
 - Not yet tried by the user: ΕΛ/EN toggle, held backspace, return, light/dark, final sigma.
 - Decided along the way: the Greek/Latin toggle key is Phase 2. Running the `en` model as well
   and showing its top candidate as an extra chip is a Phase 3 experiment (measure memory first).
@@ -140,8 +138,8 @@ the official sample (github.com/googlesamples/mlkit, `ios/quickstarts/digitalink
   Commit top candidate after a pause or on tap. Auto spaces. iPad height,
   light/dark. Host app setup screen + model status. Measure memory on device.
 - Phase 3 — NEXT, ask first: pre-context (last ~20 chars of `documentContextBeforeInput`) + writing
-  area size to ML Kit. Scribble-to-delete gesture. Punctuation, numbers, haptics. Candidates:
-  fixing words mid-text (see Status), extra `en` chip (measure first).
+  area size to ML Kit. Scribble-to-delete gesture. Punctuation, numbers, haptics. Candidate:
+  extra `en` chip (measure first).
 - Phase 4 (optional, ask first): Claude API "clean up". Needs Full Access + API
   key in Keychain. Report cost and latency before building.
 
