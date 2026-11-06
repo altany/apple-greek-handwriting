@@ -209,8 +209,10 @@ final class KeyboardViewController: UIInputViewController {
     /// Runs the other language's model (en while writing Greek, el while writing English) on the
     /// same strokes and shows its top candidate as an extra chip, so a Latin word inside Greek
     /// text needs no ΕΛ/EN switch. Skipped in number mode or when that model isn't shared.
+    /// Single words only: on a whole sentence the other model turns every word into its own
+    /// script ("θέλω να πάω στην Apple" → "aide va now on Apple"), which never helps.
     private func addOtherLanguageChip(_ strokes: [InkStroke], preContext: String, area: CGSize, inserted: String) async {
-        guard !numberMode, let service else { return }
+        guard !numberMode, let service, !inserted.contains(where: \.isWhitespace) else { return }
         let other: InkLanguage = language == .greek ? .english : .greek
         guard skipDownloadCheck || service.isDownloaded(other) else { return }
         let started = Date()
@@ -222,7 +224,8 @@ final class KeyboardViewController: UIInputViewController {
             let text = Self.cleaned(result.map(\.text)).first
             log.log("other-language chip \(other.rawValue): \(ms) ms, \"\(text ?? "-")\", \(MemoryFootprint.summary())")
             // Only if the inserted word is still the one on screen and the chip adds something new.
-            guard let text, var commit = lastCommit, commit.text == inserted,
+            guard let text, !text.contains(where: \.isWhitespace),
+                  var commit = lastCommit, commit.text == inserted,
                   !commit.alternatives.contains(text) else { return }
             commit.extra = text
             commit.extraLanguage = other

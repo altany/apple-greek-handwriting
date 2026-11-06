@@ -6,9 +6,11 @@ Personal use only. No App Store.
 
 ## Status (2026-11-06) — read this first
 - Phase 0, 1, 2 and 3 are DONE (Phase 3 closed 2026-11-06). NEXT: nothing started; ask the user.
-  Other-language chip BUILT (2026-11-06): after inserting the word, the other model runs on the
-  same strokes (maxResults 1) and its top candidate shows as a 6th chip marked EN/ΕΛ; tap swaps
-  it in; skipped in number mode; time + memory logged as "other-language chip". NOT yet tested.
+  Other-language chip (2026-11-06): after inserting the word, the other model runs on the same
+  strokes (maxResults 1); its top candidate shows as a 6th chip marked EN/ΕΛ; tap swaps it in.
+  Tested: 29–89 ms, +0.5 MB. It never helped: el already reads "Apple" itself, and on a mixed
+  sentence en turns everything Latin ("aide va now on Apple"). User chose single words only:
+  the chip is skipped when the inserted text or the en result contains a space.
   Open options: App Store path (see
   docs/app-store-investigation.md), Phase 4 (optional, ask first). Phase 3 summary:
   - Pre-context: the keyboard passes the last 20 chars before the cursor + the auto space it is

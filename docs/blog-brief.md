@@ -145,7 +145,10 @@ for live handwriting. Its Greek model is about 23 MB once unzipped.
 - The last 20 characters before the cursor are passed to ML Kit as context.
 - While writing Greek, the English model reads the same ink and its best guess shows as an extra
   chip marked EN (and the other way round), so a Latin word needs no switching. It runs after
-  the word is inserted, so it never slows the typing. (Newest feature, not yet tested.)
+  the word is inserted, so it never slows the typing (29–89 ms, +0.5 MB). Tested honestly, it
+  rarely helped: the Greek model already reads "Apple" on its own, and on a mixed sentence the
+  English model turned every word Latin ("θέλω να πάω στην Apple" → "aide va now on Apple").
+  So it now shows only for single words.
 - A zigzag on the strip erases the ink; on an empty strip it deletes the last word.
 - A row of punctuation keys (. , ; · ! ? : ' " ( ) -) and a 123 key for digits and number mode.
 - In Notes, Apple's own Scribble scratch-out also deletes the inserted words. It works even
