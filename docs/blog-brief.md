@@ -100,6 +100,23 @@ for live handwriting. Its Greek model is about 23 MB once unzipped.
 6. **One candidate instead of five.** The first keyboard test showed a single suggestion.
    A warm-up recognition at startup asked ML Kit for one result, and the cached recognizer kept
    that setting. Found from the keyboard's own log, fixed in minutes.
+7. **The gesture model that wasn't there.** Google's model table lists a Greek gesture
+   classifier (`el-x-gesture`) for scratch-out gestures. On the iPad the download failed with
+   "unknown model tag". The model list compiled into the iOS SDK has only the text languages
+   plus emoji, shapes and auto-draw. So the zigzag is detected with plain geometry: one wide,
+   flat stroke that sweeps across most of its width at least three times. Tuning it took three
+   rounds of logs. The first rule (five direction changes) missed every real zigzag, which had
+   four. The second deleted a line break instead of a word. Then a tiny dot left by the Pencil
+   just before the zigzag counted as "ink to erase". Each verdict is logged with turns, sweeps
+   and size, and normal Greek writing never triggered it.
+8. **Digits next to letters.** "1η" (1st) came out as "ξη". ML Kit has no digits-only model,
+   so a 123 key switches the keyboard into number mode. Candidates made of digits move to the
+   top, look-alikes are converted (Ο→0, ι→1, Ζ→2), and digits join without the automatic space,
+   so "15:" + "30" gives "15:30". A row of punctuation keys sits above the strip as well.
+9. **Going public safely.** Before the repo went public, a scan found the signing Team ID, the
+   iPad's device ID with the owner's first name, and a personal email as the author of every
+   commit. The history was rewritten to scrub them and use GitHub's no-reply address, with the
+   commits and messages kept, and checked file by file before the force-push.
 
 ## Numbers
 
@@ -113,7 +130,9 @@ for live handwriting. Its Greek model is about 23 MB once unzipped.
 | Keyboard memory limit, iPad Air M1 | ~90 MB |
 | Model copy into the keyboard | 13 ms (71 MB, cloned) |
 | Greek model on disk | ~23 MB unzipped (+ ~12 MB zipped download) |
-| Swift code | ~1,750 lines |
+| Keyboard memory after many reopenings | 9–15 MB |
+| Swift code | ~2,000 lines |
+| Commits | 37 over two days (5–6 Nov 2026) |
 | Time from empty repo to working keyboard | ~4 hours (17:42 → 21:29) |
 
 ## How the keyboard behaves
@@ -123,7 +142,14 @@ for live handwriting. Its Greek model is about 23 MB once unzipped.
   alternatives appear above the strip. Tap one to swap it in.
 - Backspace removes the last stroke while there is ink, otherwise deletes text; hold to repeat.
 - ΕΛ/EN switches models. Globe key switches keyboards. Light and dark follow the text field.
-- The last 20 characters before the cursor are passed to ML Kit as context (Phase 3).
+- The last 20 characters before the cursor are passed to ML Kit as context.
+- While writing Greek, the English model reads the same ink and its best guess shows as an extra
+  chip marked EN (and the other way round), so a Latin word needs no switching. It runs after
+  the word is inserted, so it never slows the typing. (Newest feature, not yet tested.)
+- A zigzag on the strip erases the ink; on an empty strip it deletes the last word.
+- A row of punctuation keys (. , ; · ! ? : ' " ( ) -) and a 123 key for digits and number mode.
+- In Notes, Apple's own Scribble scratch-out also deletes the inserted words. It works even
+  though Scribble can't read Greek handwriting. The user discovered this while testing.
 
 ## Misreads so far (honest part)
 
@@ -131,6 +157,9 @@ for live handwriting. Its Greek model is about 23 MB once unzipped.
 - "Καλημέρα αγάπη μου Μαΐου" → "Καλημέρα γάπη του Μαΐου" (leading α dropped, μ read as τ), Pencil.
 - "νερό στη βάρκα μας" → "μερό στη βάρκα μας" (ν read as μ), Pencil, in the keyboard.
 - Accents, dialytika and capitals were right every time.
+- With context switched on, the same "νερό στη βάρκα μας" came out right, and so did "Παράπονο",
+  "μέμφομαι" and "ωραίο". Near misses: "Natur boy" for "Nature boy", and "μιας" for "μας" once.
+- The user's verdict on punctuation and number mode: "works great and intuitively".
 
 ## How it was built (the AI-pair angle)
 
@@ -149,12 +178,12 @@ for live handwriting. Its Greek model is about 23 MB once unzipped.
 
 ## What's next
 
-- Phase 3 (in progress): context from the text before the cursor (done, being tested),
-  scribble-to-delete (ML Kit's docs list a Greek gesture model, but the iOS SDK doesn't ship
-  one, so a zigzag is detected with a few lines of geometry instead), punctuation and numbers.
-- Haptics are out: the iPad Air has no vibration motor.
-- Investigating an App Store release (see `docs/app-store-investigation.md`).
-- Making the repository public.
+- Phases 0–3 are done: setup, prototype app, keyboard, polish.
+- Haptics were dropped because the iPad Air has no vibration motor.
+- Possible next steps: an App Store release (see `docs/app-store-investigation.md`: the gap is
+  real, the competitor shows ads and tracks, Apple's keyboard rules are already met), and an
+  optional Claude-powered "clean up" button.
+- The repository is public under the MIT licence.
 
 ## Links
 
