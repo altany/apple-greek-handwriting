@@ -183,8 +183,8 @@ for live handwriting. Its Greek model is about 22 MB once unzipped.
 
 ## Accuracy (rough count)
 
-From the keyboard's own logs over three test sessions, counting only the 26 writes where the
-intended text is obvious, all by one writer with the Pencil:
+From the keyboard's own logs over several test sessions (5–6 Nov), counting only the 26 writes
+where the intended text is obvious, all by one writer:
 
 | Result | Writes |
 |---|---|
@@ -192,7 +192,7 @@ intended text is obvious, all by one writer with the Pencil:
 | Wrong at first, right answer one tap away in the candidate bar | 5 |
 | Wrong, right answer not offered | 1 (before context was added) |
 
-Writes were mostly words and short phrases. Four writes with unclear intent are left out.
+Writes were mostly words and short phrases. Five writes with unclear intent are left out.
 Almost every miss was a single letter: ν→μ, "1η"→"ξη", "μας"→"μιας", "σου"→"συ",
 "Nature"→"Natur". For the post, a cleaner test would help: 20 written sentences, counted by
 the author.
