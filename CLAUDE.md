@@ -4,9 +4,20 @@ Personal iPad keyboard: handwrite Greek with Apple Pencil, get text in any app.
 Apple's Scribble has no Greek and no API to add one, so this is a custom keyboard.
 Personal use only. No App Store.
 
-## Status (2026-11-05, late evening) — read this first
-- Phase 0, 1 and 2 are DONE; the user closed Phase 2 as is. NEXT: Phase 3, not started. The user
-  has NOT said "go": ask first. Phase 2 results (first keyboard test, 21:29, no Full Access):
+## Status (2026-11-06) — read this first
+- Phase 0, 1 and 2 are DONE. Phase 3 is IN PROGRESS (user said "go" on 2026-11-06). Built and
+  installed, waiting for the user's test round:
+  - Pre-context: the keyboard passes the last 20 chars before the cursor + the auto space it is
+    about to add (so ML Kit treats the ink as a new word), and trims/dedupes candidates. Per the
+    docs ML Kit emits a leading space when it infers a word break from pre-context. Check the
+    keyboard log ("pre-context …, candidates: "…"") for misreads and leading spaces.
+  - Gesture probe: `el-x-gesture` (tag from the ML Kit base-models table) downloadable in Setup,
+    shared with the keyboard, run on every word, labels + scores only LOGGED. The docs don't list
+    its labels; read them from the log, then build scribble-to-delete (scribble on the strip =
+    delete the last inserted word is the obvious meaning). If the tag fails to download, say so.
+  - Punctuation and numbers: no code yet; the user tests handwriting them first.
+  - Haptics: dropped. The iPad Air has no Taptic Engine.
+- Phase 2 results (first keyboard test, 2026-11-05 21:29, no Full Access):
   - Model sharing works: app copies ML Kit's folder into the App Group, keyboard copies it into
     its own container (13 ms, APFS clone) and adds metadata files renamed to its bundle id.
     `isModelDownloaded` = true for el and en, warm-up recognition OK. Full Access not needed.
@@ -15,10 +26,14 @@ Personal use only. No App Store.
   - Timing in the keyboard: warm-up 53 ms, 12 strokes / 1193 points recognised in 93 ms.
   - Bug found and fixed: only 1 candidate showed (warm-up cached a maxResults-1 recognizer).
     Reinstalled; the 5-candidate bar is not yet re-tested by the user.
-- Fixing a misread word in the middle or at the start: the user found a way to do it with the
-  current keyboard (2026-11-06) and wants no work on it now. Ideas kept only in case it comes
-  back: candidates for any recent word, space-bar cursor, write over a selection.
-- Not yet tried by the user: ΕΛ/EN toggle, held backspace, return, light/dark, final sigma.
+- Fixing a misread word mid-text: the user has a way with the current keyboard; no work wanted.
+- Repo going public (user asked 2026-11-06): working tree cleaned (README for outsiders, Team ID
+  stripped from the generated pbxproj, UDID/team details only in local memory, placeholder bundle
+  prefix in Local.xcconfig.example). NOT done, needs the user's OK: git history still has the
+  Team ID (pbxproj, commits e4f542a..before e146383), the UDID and "iPad – <name>" in old
+  CLAUDE.md, and the gmail address as author of every commit; flipping visibility; a licence.
+- Docs for the user: `docs/blog-brief.md` (facts for their blog-writing agent),
+  `docs/app-store-investigation.md` (competitors, Guideline 4.4.1, what a store release needs).
 - Decided along the way: the Greek/Latin toggle key is Phase 2. Running the `en` model as well
   and showing its top candidate as an extra chip is a Phase 3 experiment (measure memory first).
   Phase 4 stays optional: ask first, report cost and latency before building.
@@ -210,6 +225,9 @@ copy, paste) and propose a Share/Action extension or a Shortcut.
   (leading α of αγάπη dropped, μ → τ/κ). Accents, dialytika and capitals right both times.
   One candidate contained a Latin "g" ("gάπη"), so the el model can emit some Latin letters,
   but its language model strongly prefers Greek words.
+- Latin in the el model, later test in the app (2026-11-05 21:18): el read "Apple" correctly and
+  "Hello, αγάπη μου!" with both scripts; en read "Good morning". So the earlier "Αρρα δω" is not
+  the rule. The user reports English works; it was tested in the app, not yet in the keyboard.
 - First keyboard misread (Pencil, 12 strokes): "νερό στη βάρκα μας" → "μερό στη βάρκα μας"
   (ν → μ at the start). Only 1 candidate was shown then (bug, fixed).
 - ML Kit's MDD metadata files are named `<bundle id>.com.google.mlkit.mdd.cellular.<model

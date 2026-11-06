@@ -105,6 +105,7 @@ Shared/                  Compiled into both: ink canvas, ML Kit wrapper, model s
 scripts/install-ipad.sh  Build, install and launch on the iPad
 Podfile, Podfile.lock    ML Kit via CocoaPods
 CLAUDE.md                Working notes: decisions, measurements, findings, phase status
+docs/                    Blog brief, App Store investigation
 ```
 
 ## Troubleshooting
