@@ -1,5 +1,5 @@
 // Renders the 1024×1024 app icon: a white handwritten-style Greek "α" with an ink stroke
-// under it, on a deep blue gradient. Run: swift scripts/make-icon.swift <output.png>
+// under it, on a teal-to-purple gradient. Run: swift scripts/make-icon.swift <output.png>
 import AppKit
 
 let size = 1024.0
@@ -11,10 +11,11 @@ NSGraphicsContext.saveGraphicsState()
 NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: rep)
 let ctx = NSGraphicsContext.current!.cgContext
 
-// Background: deep blue, lighter at the top. Full bleed; iOS rounds the corners itself.
-let colors = [NSColor(red: 0.16, green: 0.36, blue: 0.86, alpha: 1).cgColor,
-              NSColor(red: 0.05, green: 0.13, blue: 0.42, alpha: 1).cgColor] as CFArray
-let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 1])!
+// Background: teal (top left) to vivid purple (bottom right). Full bleed; iOS rounds the corners.
+let colors = [NSColor(red: 0.00, green: 0.86, blue: 0.76, alpha: 1).cgColor,
+              NSColor(red: 0.30, green: 0.42, blue: 0.98, alpha: 1).cgColor,
+              NSColor(red: 0.66, green: 0.16, blue: 0.94, alpha: 1).cgColor] as CFArray
+let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(), colors: colors, locations: [0, 0.5, 1])!
 ctx.drawLinearGradient(gradient, start: CGPoint(x: 0, y: size), end: CGPoint(x: size, y: 0), options: [])
 
 // The letter: Georgia Italic has proper Greek glyphs.
