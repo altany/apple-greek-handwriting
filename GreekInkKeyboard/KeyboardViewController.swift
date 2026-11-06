@@ -291,22 +291,23 @@ final class KeyboardViewController: UIInputViewController {
         }
     }
 
-    /// Deletes the word before the cursor and the space before it. Uses the last inserted word
-    /// when the text still ends with it, otherwise whatever word precedes the cursor.
+    /// Deletes the word before the cursor and the space before it, on the current line only:
+    /// it never deletes a line break or an attachment (Notes puts U+FFFC for those).
     private func deleteLastWord() {
         let before = textDocumentProxy.documentContextBeforeInput ?? ""
+        let stops: (Character) -> Bool = { $0.isNewline || $0 == "\u{FFFC}" }
         var count: Int
         if let commit = lastCommit, before.hasSuffix(commit.text) {
             count = commit.text.count
         } else {
-            let trimmed = before.reversed().drop { $0.isWhitespace }
+            let trimmed = before.reversed().drop { $0 == " " || $0 == "\t" }
             let trailingSpaces = before.count - trimmed.count
-            count = trailingSpaces + trimmed.prefix { !$0.isWhitespace }.count
+            let word = trimmed.prefix { !$0.isWhitespace && !stops($0) }.count
+            count = word == 0 ? 0 : trailingSpaces + word
         }
+        guard count > 0 else { log.log("scribble: no word before the cursor on this line, nothing deleted"); return }
         // Also remove one space in front of the word (the auto space), if there is one.
-        let rest = before.dropLast(count)
-        if rest.last == " " { count += 1 }
-        guard count > 0 else { log.log("scribble: nothing to delete"); return }
+        if before.dropLast(count).last == " " { count += 1 }
         for _ in 0..<count { textDocumentProxy.deleteBackward() }
         log.log("scribble: deleted \(count) characters (“\(before.suffix(count))”)")
         clearCandidates()

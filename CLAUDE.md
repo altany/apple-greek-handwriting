@@ -14,10 +14,13 @@ Personal use only. No App Store.
   - Scribble to delete: ML Kit iOS 8.0.0 has NO gesture classifier. `el-x-gesture` fails as
     "unknown model tag" on the iPad, and the SDK binary's built-in model list has only the text
     languages plus zxx-Zsye-x-emoji, zxx-Zsym-x-autodraw, zxx-Zsym-x-shapes (checked with
-    `strings`). So `GreekInkKeyboard/ScribbleDetector.swift` detects a zigzag itself (one stroke,
-    ≥5 horizontal reversals, ≥50 pt wide, height ≤ 0.9 × width). With other ink on the strip it
-    erases the ink; on an empty strip it deletes the last word (+ the space before it). Every
-    stroke's verdict is logged ("stroke: … reversals …") to tune thresholds. Not yet tested.
+    `strings`). So `GreekInkKeyboard/ScribbleDetector.swift` detects a zigzag itself: one stroke
+    with ≥3 legs sweeping ≥50% of its width, ≥60 pt wide, height ≤ 0.6 × width. First version
+    (≥5 turns) missed the user's zigzags: they have 4 turns, 104–175 × 35–58 pt. With ink on the
+    strip a zigzag erases it. On an empty strip it deletes the last word on the current line,
+    never a line break or attachment (U+FFFC); the first version deleted a "\n". Verdicts logged.
+  - Apple's own Scribble scratch-out works on the inserted text in Notes (user found it), even
+    though Scribble has no Greek handwriting. That is the easy way to delete a word mid-text.
   - Test round 2026-11-06 13:33–13:38 (keyboard, Pencil): 5 candidates now show. All of these came
     out right: "Νερό στη βάρκα μας" (the ν→μ misread is gone), "Παράπονο", "μέμφομαι", "ωραίο"
     (written after "μέμφομαι ", no leading space returned), en "Nature", "Hurt". Near misses:
