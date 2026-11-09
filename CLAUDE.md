@@ -46,6 +46,15 @@ Personal use only. No App Store.
     User tested: "works great and intuitively". The αβγ label wrapped one letter per line
     (equal-width keys); the toggle now has a fixed 72 pt width and a one-line title.
   - Haptics: dropped. The iPad Air has no Taptic Engine.
+- Memory leak FIXED (2026-11-09): keyboard memory grew ~0.6 MB per open (7 Nov: 20 → 79 MB in an
+  evening, memory warnings). Cause, found with Instruments Allocations over Wi-Fi
+  (`xcrun xctrace record --device "<device name from xctrace list devices>" --template Allocations
+  --attach GreekInkKeyboard`; the device NAME works, the UDID and pid did not): iPadOS never frees a
+  keyboard's root UIInputView (UIKit retain cycle with _UIInputViewContent, reported on Apple's
+  forums), so everything inside leaked (18 opens → 18 canvases, 414 buttons alive). Fix: all UI
+  lives in one `content` view removed from the root in viewDidDisappear/deinit; plus one ML Kit
+  service per process. After: 21 opens → 1 canvas alive, memory flat (+0.5 MB over 20 opens).
+  The recorder itself adds ~25 MB while attached. The iPad must show in Xcode's Devices window.
 - Phase 2 results (first keyboard test, 2026-11-05 21:29, no Full Access):
   - Model sharing works: app copies ML Kit's folder into the App Group, keyboard copies it into
     its own container (13 ms, APFS clone) and adds metadata files renamed to its bundle id.

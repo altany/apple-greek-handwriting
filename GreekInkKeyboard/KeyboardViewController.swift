@@ -23,6 +23,11 @@ final class KeyboardViewController: UIInputViewController {
     private var globeKey: UIButton!
     private var languageKey: UIButton!
     private var heightConstraint: NSLayoutConstraint?
+    /// Everything we draw, in one view. iPadOS never frees a keyboard's root UIInputView (a
+    /// UIKit retain cycle with its internal _UIInputViewContent; reported on Apple's forums), so
+    /// whatever is inside it leaked: ~0.6 MB per open (Instruments: 18 opens, 18 canvases and
+    /// 414 buttons still alive). We take this view out of the root when the keyboard goes away.
+    private let content = UIStackView()
 
     private var service: InkRecognitionService?
     /// One ML Kit service per keyboard process. iPadOS keeps the process alive and builds a new
@@ -72,6 +77,7 @@ final class KeyboardViewController: UIInputViewController {
     deinit {
         MainActor.assumeIsolated {
             Self.liveControllers -= 1
+            content.removeFromSuperview()
             DiagnosticsLog.shared.log("keyboard controller freed, controllers alive \(Self.liveControllers), \(MemoryFootprint.summary())")
         }
     }
@@ -85,6 +91,7 @@ final class KeyboardViewController: UIInputViewController {
             c.isActive = true
             heightConstraint = c
         }
+        attachContent()
         applyAppearance()
     }
 
@@ -95,6 +102,24 @@ final class KeyboardViewController: UIInputViewController {
         canvas.clear()
         clearCandidates()
         log.log("keyboard closing, controllers alive \(Self.liveControllers), \(MemoryFootprint.summary())")
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        // See `content`: the root view leaks, so leave it empty.
+        content.removeFromSuperview()
+    }
+
+    /// Puts `content` into the root view (again, if the keyboard comes back on this controller).
+    private func attachContent() {
+        guard content.superview == nil else { return }
+        view.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
+            content.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
+            content.topAnchor.constraint(equalTo: view.topAnchor, constant: 6),
+            content.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
+        ])
     }
 
     override func viewWillLayoutSubviews() {
@@ -452,17 +477,13 @@ final class KeyboardViewController: UIInputViewController {
         symbolRow.distribution = .fill
         rebuildSymbolRow()
 
-        let column = UIStackView(arrangedSubviews: [candidateRow, symbolRow, canvas, keyRow])
-        column.axis = .vertical
-        column.spacing = 6
-        column.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(column)
+        for v in [candidateRow, symbolRow, canvas, keyRow] { content.addArrangedSubview(v) }
+        content.axis = .vertical
+        content.spacing = 6
+        content.translatesAutoresizingMaskIntoConstraints = false
+        attachContent()
 
         NSLayoutConstraint.activate([
-            column.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10),
-            column.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10),
-            column.topAnchor.constraint(equalTo: view.topAnchor, constant: 6),
-            column.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -8),
             candidateRow.heightAnchor.constraint(equalToConstant: 40),
             symbolRow.heightAnchor.constraint(equalToConstant: 38),
             keyRow.heightAnchor.constraint(equalToConstant: 48),
