@@ -72,7 +72,7 @@ final class KeyboardViewController: UIInputViewController {
     deinit {
         MainActor.assumeIsolated {
             Self.liveControllers -= 1
-            DiagnosticsLog.shared.log("keyboard controller freed, controllers alive \(Self.liveControllers)")
+            DiagnosticsLog.shared.log("keyboard controller freed, controllers alive \(Self.liveControllers), \(MemoryFootprint.summary())")
         }
     }
 
@@ -94,6 +94,7 @@ final class KeyboardViewController: UIInputViewController {
         pauseTask?.cancel()
         canvas.clear()
         clearCandidates()
+        log.log("keyboard closing, controllers alive \(Self.liveControllers), \(MemoryFootprint.summary())")
     }
 
     override func viewWillLayoutSubviews() {
