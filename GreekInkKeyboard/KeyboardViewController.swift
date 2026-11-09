@@ -25,8 +25,18 @@ final class KeyboardViewController: UIInputViewController {
     private var heightConstraint: NSLayoutConstraint?
 
     private var service: InkRecognitionService?
+    /// One ML Kit service per keyboard process. iPadOS keeps the process alive and builds a new
+    /// controller every time the keyboard opens; a new service each time leaked ~0.7 MB per open
+    /// (ML Kit's native memory), up to 79 MB of the ~90 MB limit in one evening.
+    private static var sharedService: InkRecognitionService?
     /// Set when `isModelDownloaded` says no but a recognition still worked (diagnostics).
-    private var skipDownloadCheck = false
+    private static var skipDownloadCheck = false
+    private var skipDownloadCheck: Bool {
+        get { Self.skipDownloadCheck }
+        set { Self.skipDownloadCheck = newValue }
+    }
+    /// Controllers alive in this process, to check in the log that old ones are freed.
+    private static var liveControllers = 0
     private var language: InkLanguage = InkLanguage.saved
     private var pauseTask: Task<Void, Never>?
     private var recognition: Task<Void, Never>?
@@ -48,12 +58,21 @@ final class KeyboardViewController: UIInputViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         buildUI()
-        log.log("keyboard loaded, full access \(hasFullAccess), \(MemoryFootprint.summary())")
+        Self.liveControllers += 1
+        log.log("keyboard loaded, full access \(hasFullAccess), controllers alive \(Self.liveControllers), "
+                + "model \(Self.sharedService == nil ? "new" : "reused"), \(MemoryFootprint.summary())")
         setStatus("loading model…")
         // File copy off the main thread; ML Kit is created only after it finishes.
         DispatchQueue.global(qos: .userInitiated).async { [weak self] in
             let result = ModelSharing.importIntoKeyboard()
             DispatchQueue.main.async { self?.modelImported(result) }
+        }
+    }
+
+    deinit {
+        MainActor.assumeIsolated {
+            Self.liveControllers -= 1
+            DiagnosticsLog.shared.log("keyboard controller freed, controllers alive \(Self.liveControllers)")
         }
     }
 
@@ -106,7 +125,15 @@ final class KeyboardViewController: UIInputViewController {
     private func modelImported(_ result: String) {
         log.log(result)
         log.log("after import, \(MemoryFootprint.summary())")
+        // Reuse the process-wide service unless the import just brought new model files.
+        if let shared = Self.sharedService, !result.hasPrefix("import: copied") {
+            service = shared
+            setStatus(readyStatus())
+            if !canvas.strokes.isEmpty { scheduleCommit() }
+            return
+        }
         let service = InkRecognitionService()
+        Self.sharedService = service
         self.service = service
         for l in InkLanguage.allCases { log.log("isModelDownloaded(\(l.rawValue)) = \(service.isDownloaded(l))") }
         Task { await warmUp(service) }
