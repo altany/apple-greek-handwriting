@@ -140,6 +140,35 @@ docs/                    Blog brief, App Store investigation
 - *Simulator build fails on Apple Silicon*: expected, ML Kit excludes the arm64 simulator.
   Use a real iPad.
 
+## Using it for another language
+
+Greek isn't the only language missing from Scribble. ML Kit has handwriting models for
+[over 300 languages](https://developers.google.com/ml-kit/vision/digital-ink-recognition/base-models),
+and nothing in the recognition, the model sharing or the scratch-out depends on Greek. To switch
+the keyboard to another language, change these:
+
+- `Shared/Recognition/InkLanguage.swift`: the ML Kit tag (`case greek = "el"`, e.g. `"ru"`,
+  `"bg"`, `"uk"`), its `label` (shown on the Setup tab), and the default in `saved`.
+- `GreekInkKeyboard/KeyboardViewController.swift`:
+  - the language key: its title in `updateLanguageKey()` (`"ΕΛ"` / `"EN"`) and the switch
+    between the two languages in `languageTapped()`;
+  - `punctuation`, the symbol row (Greek has `;` as its question mark and `·`);
+  - `needsSpace(before:word:)`, which decides when to add the automatic space (it knows the
+    Greek question mark and ano teleia).
+- `GreekInkKeyboard/NumberMode.swift`: `lookalikes`, the letters that number mode turns into
+  digits (Greek Ο, ι, Ζ, Τ, Β next to the Latin ones). Add the look-alikes of your script.
+- `project.yml`: `PrimaryLanguage: el` for the keyboard (the language iPadOS files it under), and,
+  if you like, the app name and bundle IDs. Then run
+  `tools/xcodegen/bin/xcodegen generate && pod install`.
+
+Then download the new model on the Setup tab; the copy for the keyboard happens by itself.
+
+That should be enough for languages written left to right with spaces between words, such as
+Russian or Bulgarian (only Greek and English have been tried). Two kinds need more work and are
+untested: right-to-left scripts such as Arabic and Hebrew (at least `PrefersRightToLeft` in
+`project.yml`), and languages without spaces such as Chinese, Japanese or Thai (the automatic
+space has to go).
+
 ## How it was built
 
 Built with [Claude Code](https://claude.com/claude-code) in phases (setup, prototype app,
